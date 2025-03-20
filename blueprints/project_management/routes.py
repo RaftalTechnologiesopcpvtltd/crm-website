@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from app import db
-from models import Project, Task, User, Employee, ClientUser, ProjectMilestone, ProjectPayment, Account, Sales, Leave, Payroll
+from models import Project, Task, User, Employee, ClientUser, ProjectMilestone, ProjectPayment, Account, Sales, Leave, Payroll, Attendance
 from blueprints.project_management.forms import (
     ProjectForm, TaskForm, ClientUserForm, ProjectMilestoneForm, 
     ProjectPaymentForm, AccountForm, SalesForm

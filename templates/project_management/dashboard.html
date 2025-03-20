@@ -324,12 +324,362 @@
     </div>
 </div>
 
+<!-- Department-Specific Quick Actions -->
+{% if current_user.department == 'hr' or current_user.is_admin %}
+<!-- HR Department Quick Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-users-cog me-2"></i>HR Department Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- HR Statistics -->
+                    <div class="col-md-4 mb-3">
+                        <div class="stats-card bg-light">
+                            <h4>Department Overview</h4>
+                            <div class="stats-item">
+                                <i class="fas fa-user-tie text-primary"></i>
+                                <span class="stats-label">Total Employees:</span>
+                                <span class="stats-value">{{ department_data.hr.total_employees }}</span>
+                            </div>
+                            <div class="stats-item">
+                                <i class="fas fa-calendar-alt text-success"></i>
+                                <span class="stats-label">Pending Leaves:</span>
+                                <span class="stats-value">{{ department_data.hr.pending_leaves }}</span>
+                            </div>
+                            <div class="stats-item">
+                                <i class="fas fa-clock text-info"></i>
+                                <span class="stats-label">Attendances Today:</span>
+                                <span class="stats-value">{{ department_data.hr.attendance_today }}</span>
+                            </div>
+                            <div class="stats-item">
+                                <i class="fas fa-money-bill-wave text-warning"></i>
+                                <span class="stats-label">Payrolls Pending:</span>
+                                <span class="stats-value">{{ department_data.hr.payrolls_pending }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Quick Action Widgets -->
+                    <div class="col-md-8 mb-3">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="widget-card">
+                                    <i class="fas fa-user-plus widget-icon bg-primary"></i>
+                                    <div class="widget-content">
+                                        <h5>Employee Management</h5>
+                                        <p>Add, edit, or view employee records</p>
+                                        <a href="{{ url_for('hr.employees') }}" class="btn btn-sm btn-primary">Manage Employees</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="widget-card">
+                                    <i class="fas fa-clipboard-check widget-icon bg-success"></i>
+                                    <div class="widget-content">
+                                        <h5>Attendance Tracking</h5>
+                                        <p>Record or update employee attendance</p>
+                                        <a href="{{ url_for('hr.attendance') }}" class="btn btn-sm btn-success">Track Attendance</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="widget-card">
+                                    <i class="fas fa-calendar-alt widget-icon bg-info"></i>
+                                    <div class="widget-content">
+                                        <h5>Leave Management</h5>
+                                        <p>{% if department_data.hr.pending_leaves > 0 %}<span class="badge bg-warning">{{ department_data.hr.pending_leaves }} pending</span>{% else %}Manage leave requests{% endif %}</p>
+                                        <a href="{{ url_for('hr.leaves') }}" class="btn btn-sm btn-info">Manage Leaves</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="widget-card">
+                                    <i class="fas fa-money-check-alt widget-icon bg-warning"></i>
+                                    <div class="widget-content">
+                                        <h5>Payroll Processing</h5>
+                                        <p>{% if department_data.hr.payrolls_pending > 0 %}<span class="badge bg-warning">{{ department_data.hr.payrolls_pending }} pending</span>{% else %}Process employee payrolls{% endif %}</p>
+                                        <a href="{{ url_for('hr.payroll') }}" class="btn btn-sm btn-warning">Process Payroll</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Attendance Records -->
+                {% if department_data.hr.recent_attendances %}
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h5>Recent Attendance Records</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Employee</th>
+                                        <th>Date</th>
+                                        <th>Check-In</th>
+                                        <th>Check-Out</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for attendance in department_data.hr.recent_attendances %}
+                                    <tr>
+                                        <td>{{ attendance.employee.full_name }}</td>
+                                        <td>{{ attendance.date | formatdate }}</td>
+                                        <td>{{ attendance.check_in_time.strftime('%H:%M') if attendance.check_in_time else 'N/A' }}</td>
+                                        <td>{{ attendance.check_out_time.strftime('%H:%M') if attendance.check_out_time else 'N/A' }}</td>
+                                        <td>
+                                            <span class="badge {{ 'bg-success' if attendance.status == 'present' else 'bg-danger' if attendance.status == 'absent' else 'bg-warning text-dark' if attendance.status == 'late' else 'bg-info text-dark' }}">
+                                                {{ attendance.status|capitalize }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-end">
+                            <a href="{{ url_for('hr.attendance') }}" class="btn btn-outline-primary btn-sm">View All Attendance Records</a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if current_user.department == 'accounting' or current_user.is_admin %}
+<!-- Accounting Department Quick Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Accounting Department Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Accounting Statistics -->
+                    <div class="col-md-4 mb-3">
+                        <div class="stats-card bg-light">
+                            <h4>Financial Overview</h4>
+                            <div class="stats-item">
+                                <i class="fas fa-file-invoice-dollar text-success"></i>
+                                <span class="stats-label">Total Sales:</span>
+                                <span class="stats-value">{{ department_data.accounting.total_sales }}</span>
+                            </div>
+                            <div class="stats-item">
+                                <i class="fas fa-hand-holding-usd text-info"></i>
+                                <span class="stats-label">Total Revenue:</span>
+                                <span class="stats-value">${{ department_data.accounting.total_revenue }}</span>
+                            </div>
+                            <div class="stats-item">
+                                <i class="fas fa-hourglass-half text-warning"></i>
+                                <span class="stats-label">Pending Payments:</span>
+                                <span class="stats-value">{{ department_data.accounting.pending_payments }}</span>
+                            </div>
+                            <div class="stats-item">
+                                <i class="fas fa-money-bill-alt text-danger"></i>
+                                <span class="stats-label">Outstanding:</span>
+                                <span class="stats-value">${{ department_data.accounting.outstanding_amount }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Quick Action Widgets -->
+                    <div class="col-md-8 mb-3">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="widget-card">
+                                    <i class="fas fa-book widget-icon bg-primary"></i>
+                                    <div class="widget-content">
+                                        <h5>Chart of Accounts</h5>
+                                        <p>Manage your accounts structure</p>
+                                        <a href="{{ url_for('accounting.chart_of_accounts') }}" class="btn btn-sm btn-primary">View Accounts</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="widget-card">
+                                    <i class="fas fa-exchange-alt widget-icon bg-success"></i>
+                                    <div class="widget-content">
+                                        <h5>Journal Entries</h5>
+                                        <p>Create and manage transactions</p>
+                                        <a href="{{ url_for('accounting.journal_entries') }}" class="btn btn-sm btn-success">View Entries</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="widget-card">
+                                    <i class="fas fa-file-invoice widget-icon bg-info"></i>
+                                    <div class="widget-content">
+                                        <h5>Financial Reports</h5>
+                                        <p>Balance Sheet and Income Statement</p>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('accounting.balance_sheet') }}" class="btn btn-info">Balance Sheet</a>
+                                            <a href="{{ url_for('accounting.income_statement') }}" class="btn btn-info">Income Statement</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="widget-card">
+                                    <i class="fas fa-hand-holding-usd widget-icon bg-warning"></i>
+                                    <div class="widget-content">
+                                        <h5>Payment Management</h5>
+                                        <p>{% if department_data.accounting.pending_payments > 0 %}<span class="badge bg-warning">{{ department_data.accounting.pending_payments }} pending</span>{% else %}Track project payments{% endif %}</p>
+                                        <a href="{{ url_for('project_management.payments') }}" class="btn btn-sm btn-warning">Manage Payments</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if current_user.department == 'developer' or current_user.is_admin %}
+<!-- Developer Department Quick Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-laptop-code me-2"></i>Developer Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Developer Statistics -->
+                    <div class="col-md-4 mb-3">
+                        <div class="stats-card bg-light">
+                            <h4>Task Overview</h4>
+                            <div class="stats-item">
+                                <i class="fas fa-tasks text-primary"></i>
+                                <span class="stats-label">Assigned Tasks:</span>
+                                <span class="stats-value">{{ department_data.developer.assigned_tasks }}</span>
+                            </div>
+                            <div class="stats-item">
+                                <i class="fas fa-search text-info"></i>
+                                <span class="stats-label">In Review:</span>
+                                <span class="stats-value">{{ department_data.developer.in_review_tasks }}</span>
+                            </div>
+                            <div class="stats-item">
+                                <i class="fas fa-exclamation-triangle text-danger"></i>
+                                <span class="stats-label">Urgent Tasks:</span>
+                                <span class="stats-value">{{ department_data.developer.urgent_tasks }}</span>
+                            </div>
+                            <div class="stats-item">
+                                <i class="fas fa-check-double text-success"></i>
+                                <span class="stats-label">Productivity:</span>
+                                <span class="stats-value">{{ department_data.developer.productivity|round(1) }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Quick Action Widgets -->
+                    <div class="col-md-8 mb-3">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="widget-card">
+                                    <i class="fas fa-clipboard-list widget-icon bg-primary"></i>
+                                    <div class="widget-content">
+                                        <h5>My Tasks</h5>
+                                        <p>{% if employee_insights.overdue_tasks|length > 0 %}<span class="badge bg-danger">{{ employee_insights.overdue_tasks|length }} overdue</span>{% else %}View and update your tasks{% endif %}</p>
+                                        <a href="{{ url_for('project_management.tasks') }}" class="btn btn-sm btn-primary">View Tasks</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="widget-card">
+                                    <i class="fas fa-project-diagram widget-icon bg-success"></i>
+                                    <div class="widget-content">
+                                        <h5>My Projects</h5>
+                                        <p>Projects you're working on</p>
+                                        <a href="{{ url_for('project_management.projects') }}" class="btn btn-sm btn-success">View Projects</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="widget-card">
+                                    <i class="fas fa-calendar-day widget-icon bg-info"></i>
+                                    <div class="widget-content">
+                                        <h5>Attendance</h5>
+                                        <p>
+                                            {% if employee_insights.today_attendance %}
+                                                <span class="badge bg-success">Checked in at {{ employee_insights.today_attendance.check_in_time.strftime('%H:%M') if employee_insights.today_attendance.check_in_time else 'N/A' }}</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">Not checked in today</span>
+                                            {% endif %}
+                                        </p>
+                                        <a href="{{ url_for('hr.attendance') }}" class="btn btn-sm btn-info">View Attendance</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="widget-card">
+                                    <i class="fas fa-umbrella-beach widget-icon bg-warning"></i>
+                                    <div class="widget-content">
+                                        <h5>Leave Requests</h5>
+                                        <p>
+                                            {% if employee_insights.upcoming_leaves %}
+                                                <span class="badge bg-info">Next leave: {{ employee_insights.upcoming_leaves[0].start_date.strftime('%b %d') }}</span>
+                                            {% else %}
+                                                Request time off
+                                            {% endif %}
+                                        </p>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('hr.leaves') }}" class="btn btn-warning">View Leaves</a>
+                                            <a href="{{ url_for('hr.new_leave') }}" class="btn btn-warning">Request</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Task Progress -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h5>My Task Progress</h5>
+                        <div class="progress mb-3" style="height: 25px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ completed_tasks / total_tasks * 100 if total_tasks > 0 else 0 }}%;" 
+                                 aria-valuenow="{{ completed_tasks }}" aria-valuemin="0" aria-valuemax="{{ total_tasks }}">
+                                 {{ completed_tasks }} Completed
+                            </div>
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: {{ in_progress_tasks / total_tasks * 100 if total_tasks > 0 else 0 }}%;" 
+                                 aria-valuenow="{{ in_progress_tasks }}" aria-valuemin="0" aria-valuemax="{{ total_tasks }}">
+                                 {{ in_progress_tasks }} In Progress
+                            </div>
+                            <div class="progress-bar bg-info" role="progressbar" style="width: {{ todo_tasks / total_tasks * 100 if total_tasks > 0 else 0 }}%;" 
+                                 aria-valuenow="{{ todo_tasks }}" aria-valuemin="0" aria-valuemax="{{ total_tasks }}">
+                                 {{ todo_tasks }} To-Do
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 {% if current_user.is_admin %}
 <!-- Admin Section -->
 <div class="row">
     <div class="col-12">
         <div class="card">
-            <div class="card-header bg-primary">
+            <div class="card-header bg-dark text-white">
                 <h5 class="card-title mb-0">Administrator Quick Actions</h5>
             </div>
             <div class="card-body">
