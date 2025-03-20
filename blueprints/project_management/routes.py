@@ -144,7 +144,7 @@ def new_project():
             payment_status=form.payment_status.data
         )
         
-        if form.client_user_id.data > 0:
+        if form.client_user_id.data and form.client_user_id.data > 0:
             project.client_user_id = form.client_user_id.data
             
         db.session.add(project)
