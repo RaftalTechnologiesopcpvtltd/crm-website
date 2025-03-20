@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">{{ title }}</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active">{{ title }}</li>
+    </ol>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-table me-1"></i>
+                    Balance Sheet as of {{ as_of_date.strftime('%B %d, %Y') }}
+                </div>
+                <div>
+                    <form method="GET" action="{{ url_for('accounting.balance_sheet') }}" class="d-flex">
+                        <div class="input-group me-2">
+                            <span class="input-group-text">As of Date</span>
+                            <input type="date" class="form-control" name="as_of_date" value="{{ as_of_date|string }}" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-12 mb-4">
+                    <div class="text-center mb-4">
+                        <h3 class="mb-0">Company Name</h3>
+                        <h4>Balance Sheet</h4>
+                        <p>As of {{ as_of_date.strftime('%B %d, %Y') }}</p>
+                    </div>
+                    
+                    <!-- Assets Section -->
+                    <div class="mb-4">
+                        <h5 class="fw-bold border-bottom pb-2">Assets</h5>
+                        {% for account in asset_accounts %}
+                        <div class="row mb-1">
+                            <div class="col-md-6 ps-4">
+                                <span class="{% if account.parent_id %}ps-3{% endif %}">{{ account.code }} - {{ account.name }}</span>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                {{ account.balance_amount|format_currency }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                        <div class="row fw-bold">
+                            <div class="col-md-6 ps-4">
+                                Total Assets
+                            </div>
+                            <div class="col-md-6 text-end">
+                                {{ total_assets|format_currency }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Liabilities Section -->
+                    <div class="mb-4">
+                        <h5 class="fw-bold border-bottom pb-2">Liabilities</h5>
+                        {% for account in liability_accounts %}
+                        <div class="row mb-1">
+                            <div class="col-md-6 ps-4">
+                                <span class="{% if account.parent_id %}ps-3{% endif %}">{{ account.code }} - {{ account.name }}</span>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                {{ account.balance_amount|format_currency }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                        <div class="row fw-bold">
+                            <div class="col-md-6 ps-4">
+                                Total Liabilities
+                            </div>
+                            <div class="col-md-6 text-end">
+                                {{ total_liabilities|format_currency }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Equity Section -->
+                    <div class="mb-4">
+                        <h5 class="fw-bold border-bottom pb-2">Equity</h5>
+                        {% for account in equity_accounts %}
+                        <div class="row mb-1">
+                            <div class="col-md-6 ps-4">
+                                <span class="{% if account.parent_id %}ps-3{% endif %}">{{ account.code }} - {{ account.name }}</span>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                {{ account.balance_amount|format_currency }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                        <div class="row fw-bold">
+                            <div class="col-md-6 ps-4">
+                                Total Equity
+                            </div>
+                            <div class="col-md-6 text-end">
+                                {{ total_equity|format_currency }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Total Liabilities & Equity -->
+                    <div class="mb-4">
+                        <div class="row fw-bold border-top pt-2">
+                            <div class="col-md-6 ps-4">
+                                Total Liabilities & Equity
+                            </div>
+                            <div class="col-md-6 text-end">
+                                {{ total_liabilities_equity|format_currency }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between mt-3">
+                <a href="{{ url_for('accounting.general_ledger') }}" class="btn btn-secondary">Back to General Ledger</a>
+                <div>
+                    <button class="btn btn-success" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i> Print
+                    </button>
+                    <a href="#" class="btn btn-primary">
+                        <i class="fas fa-file-pdf me-1"></i> Export PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add any JavaScript specific to balance sheet here
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">{{ title }}</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active">{{ title }}</li>
+    </ol>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-chart-line me-1"></i>
+                    Income Statement from {{ from_date.strftime('%B %d, %Y') }} to {{ to_date.strftime('%B %d, %Y') }}
+                </div>
+                <div>
+                    <form method="GET" action="{{ url_for('accounting.income_statement') }}" class="d-flex">
+                        <div class="input-group me-2">
+                            <span class="input-group-text">From</span>
+                            <input type="date" class="form-control" name="from_date" value="{{ from_date|string }}" required>
+                        </div>
+                        <div class="input-group me-2">
+                            <span class="input-group-text">To</span>
+                            <input type="date" class="form-control" name="to_date" value="{{ to_date|string }}" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-12 mb-4">
+                    <div class="text-center mb-4">
+                        <h3 class="mb-0">Company Name</h3>
+                        <h4>Income Statement</h4>
+                        <p>For the period from {{ from_date.strftime('%B %d, %Y') }} to {{ to_date.strftime('%B %d, %Y') }}</p>
+                    </div>
+                    
+                    <!-- Revenue Section -->
+                    <div class="mb-4">
+                        <h5 class="fw-bold border-bottom pb-2">Revenue</h5>
+                        {% for account in revenue_accounts %}
+                        <div class="row mb-1">
+                            <div class="col-md-6 ps-4">
+                                <span class="{% if account.parent_id %}ps-3{% endif %}">{{ account.code }} - {{ account.name }}</span>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                {{ account.balance_amount|format_currency }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                        <div class="row fw-bold">
+                            <div class="col-md-6 ps-4">
+                                Total Revenue
+                            </div>
+                            <div class="col-md-6 text-end">
+                                {{ total_revenue|format_currency }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Expense Section -->
+                    <div class="mb-4">
+                        <h5 class="fw-bold border-bottom pb-2">Expenses</h5>
+                        {% for account in expense_accounts %}
+                        <div class="row mb-1">
+                            <div class="col-md-6 ps-4">
+                                <span class="{% if account.parent_id %}ps-3{% endif %}">{{ account.code }} - {{ account.name }}</span>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                {{ account.balance_amount|format_currency }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                        <div class="row fw-bold">
+                            <div class="col-md-6 ps-4">
+                                Total Expenses
+                            </div>
+                            <div class="col-md-6 text-end">
+                                {{ total_expenses|format_currency }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Net Income -->
+                    <div class="mb-4">
+                        <div class="row fw-bold border-top pt-2">
+                            <div class="col-md-6 ps-4">
+                                Net Income
+                            </div>
+                            <div class="col-md-6 text-end">
+                                {{ net_income|format_currency }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between mt-3">
+                <a href="{{ url_for('accounting.general_ledger') }}" class="btn btn-secondary">Back to General Ledger</a>
+                <div>
+                    <button class="btn btn-success" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i> Print
+                    </button>
+                    <a href="#" class="btn btn-primary">
+                        <i class="fas fa-file-pdf me-1"></i> Export PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add any JavaScript specific to income statement here
+    });
+</script>
+{% endblock %}

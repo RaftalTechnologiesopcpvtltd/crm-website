@@ -554,3 +554,227 @@ def general_ledger():
         selected_to_date=to_date,
         selected_entry_type=entry_type
     )
+
+# Financial Statements Routes
+
+@accounting_bp.route('/balance_sheet', methods=['GET'])
+@login_required
+def balance_sheet():
+    """Display the balance sheet"""
+    as_of_date_str = request.args.get('as_of_date')
+    as_of_date = None
+    
+    if as_of_date_str:
+        try:
+            as_of_date = datetime.strptime(as_of_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            flash('Invalid date format. Using current date.', 'warning')
+            as_of_date = date.today()
+    else:
+        as_of_date = date.today()
+    
+    # Get asset accounts
+    asset_accounts = ChartOfAccount.query.filter_by(
+        account_type='Asset', 
+        is_active=True
+    ).order_by(ChartOfAccount.code).all()
+    
+    # Get liability accounts
+    liability_accounts = ChartOfAccount.query.filter_by(
+        account_type='Liability', 
+        is_active=True
+    ).order_by(ChartOfAccount.code).all()
+    
+    # Get equity accounts
+    equity_accounts = ChartOfAccount.query.filter_by(
+        account_type='Equity', 
+        is_active=True
+    ).order_by(ChartOfAccount.code).all()
+    
+    # Calculate account balances as of the specified date
+    for account in asset_accounts + liability_accounts + equity_accounts:
+        # Get journal entry lines for this account up to the specified date
+        query = JournalEntryLine.query.join(
+            JournalEntry, 
+            JournalEntryLine.journal_entry_id == JournalEntry.id
+        ).filter(
+            JournalEntryLine.account_id == account.id,
+            JournalEntry.date <= as_of_date,
+            JournalEntry.status == 'POSTED'  # Only consider posted entries
+        )
+        
+        # Calculate debits and credits
+        debits = sum(line.debit_amount for line in query.all())
+        credits = sum(line.credit_amount for line in query.all())
+        
+        # Calculate balance based on normal balance type
+        if account.normal_balance == 'DEBIT':
+            account.balance_amount = debits - credits
+        else:  # CREDIT
+            account.balance_amount = credits - debits
+    
+    # Calculate totals
+    total_assets = sum(account.balance_amount for account in asset_accounts)
+    total_liabilities = sum(account.balance_amount for account in liability_accounts)
+    total_equity = sum(account.balance_amount for account in equity_accounts)
+    total_liabilities_equity = total_liabilities + total_equity
+    
+    return render_template(
+        'accounting/balance_sheet.html',
+        title='Balance Sheet',
+        as_of_date=as_of_date,
+        asset_accounts=asset_accounts,
+        liability_accounts=liability_accounts,
+        equity_accounts=equity_accounts,
+        total_assets=total_assets,
+        total_liabilities=total_liabilities,
+        total_equity=total_equity,
+        total_liabilities_equity=total_liabilities_equity
+    )
+
+@accounting_bp.route('/income_statement', methods=['GET'])
+@login_required
+def income_statement():
+    """Display the income statement (profit and loss)"""
+    from_date_str = request.args.get('from_date')
+    to_date_str = request.args.get('to_date')
+    from_date = None
+    to_date = None
+    
+    if from_date_str:
+        try:
+            from_date = datetime.strptime(from_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            flash('Invalid from date format.', 'warning')
+            from_date = date.today().replace(day=1)  # First day of current month
+    else:
+        from_date = date.today().replace(day=1)  # First day of current month
+    
+    if to_date_str:
+        try:
+            to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            flash('Invalid to date format.', 'warning')
+            to_date = date.today()
+    else:
+        to_date = date.today()
+    
+    # Get revenue accounts
+    revenue_accounts = ChartOfAccount.query.filter_by(
+        account_type='Revenue', 
+        is_active=True
+    ).order_by(ChartOfAccount.code).all()
+    
+    # Get expense accounts
+    expense_accounts = ChartOfAccount.query.filter_by(
+        account_type='Expense', 
+        is_active=True
+    ).order_by(ChartOfAccount.code).all()
+    
+    # Calculate account balances for the specified period
+    for account in revenue_accounts + expense_accounts:
+        # Get journal entry lines for this account within the specified period
+        query = JournalEntryLine.query.join(
+            JournalEntry, 
+            JournalEntryLine.journal_entry_id == JournalEntry.id
+        ).filter(
+            JournalEntryLine.account_id == account.id,
+            JournalEntry.date >= from_date,
+            JournalEntry.date <= to_date,
+            JournalEntry.status == 'POSTED'  # Only consider posted entries
+        )
+        
+        # Calculate debits and credits
+        debits = sum(line.debit_amount for line in query.all())
+        credits = sum(line.credit_amount for line in query.all())
+        
+        # Calculate balance based on normal balance type
+        if account.normal_balance == 'DEBIT':
+            account.balance_amount = debits - credits
+        else:  # CREDIT
+            account.balance_amount = credits - debits
+    
+    # Calculate totals
+    total_revenue = sum(account.balance_amount for account in revenue_accounts)
+    total_expenses = sum(account.balance_amount for account in expense_accounts)
+    net_income = total_revenue - total_expenses
+    
+    return render_template(
+        'accounting/income_statement.html',
+        title='Income Statement',
+        from_date=from_date,
+        to_date=to_date,
+        revenue_accounts=revenue_accounts,
+        expense_accounts=expense_accounts,
+        total_revenue=total_revenue,
+        total_expenses=total_expenses,
+        net_income=net_income
+    )
+
+@accounting_bp.route('/trial_balance', methods=['GET'])
+@login_required
+def trial_balance():
+    """Display the trial balance"""
+    as_of_date_str = request.args.get('as_of_date')
+    as_of_date = None
+    
+    if as_of_date_str:
+        try:
+            as_of_date = datetime.strptime(as_of_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            flash('Invalid date format. Using current date.', 'warning')
+            as_of_date = date.today()
+    else:
+        as_of_date = date.today()
+    
+    # Get all active accounts
+    accounts = ChartOfAccount.query.filter_by(
+        is_active=True
+    ).order_by(ChartOfAccount.code).all()
+    
+    accounts_with_balances = []
+    total_debits = Decimal('0.00')
+    total_credits = Decimal('0.00')
+    
+    # Calculate account balances as of the specified date
+    for account in accounts:
+        # Get journal entry lines for this account up to the specified date
+        query = JournalEntryLine.query.join(
+            JournalEntry, 
+            JournalEntryLine.journal_entry_id == JournalEntry.id
+        ).filter(
+            JournalEntryLine.account_id == account.id,
+            JournalEntry.date <= as_of_date,
+            JournalEntry.status == 'POSTED'  # Only consider posted entries
+        )
+        
+        # Calculate debits and credits
+        debits = sum(line.debit_amount for line in query.all())
+        credits = sum(line.credit_amount for line in query.all())
+        
+        # Only include accounts with non-zero balances
+        if debits > 0 or credits > 0:
+            # Determine debit or credit balance
+            if debits > credits:
+                debit_balance = debits - credits
+                credit_balance = Decimal('0.00')
+                total_debits += debit_balance
+            else:
+                debit_balance = Decimal('0.00')
+                credit_balance = credits - debits
+                total_credits += credit_balance
+            
+            accounts_with_balances.append({
+                'account': account,
+                'debit_balance': debit_balance,
+                'credit_balance': credit_balance
+            })
+    
+    return render_template(
+        'accounting/trial_balance.html',
+        title='Trial Balance',
+        as_of_date=as_of_date,
+        accounts=accounts_with_balances,
+        total_debits=total_debits,
+        total_credits=total_credits
+    )

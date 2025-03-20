@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">{{ title }}</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active">{{ title }}</li>
+    </ol>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-balance-scale me-1"></i>
+                    Trial Balance as of {{ as_of_date.strftime('%B %d, %Y') }}
+                </div>
+                <div>
+                    <form method="GET" action="{{ url_for('accounting.trial_balance') }}" class="d-flex">
+                        <div class="input-group me-2">
+                            <span class="input-group-text">As of Date</span>
+                            <input type="date" class="form-control" name="as_of_date" value="{{ as_of_date|string }}" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-12 mb-4">
+                    <div class="text-center mb-4">
+                        <h3 class="mb-0">Company Name</h3>
+                        <h4>Trial Balance</h4>
+                        <p>As of {{ as_of_date.strftime('%B %d, %Y') }}</p>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Account Code</th>
+                                    <th>Account Name</th>
+                                    <th>Type</th>
+                                    <th class="text-end">Debit</th>
+                                    <th class="text-end">Credit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in accounts %}
+                                <tr>
+                                    <td>{{ item.account.code }}</td>
+                                    <td>{{ item.account.name }}</td>
+                                    <td>{{ item.account.account_type }}</td>
+                                    <td class="text-end">{{ item.debit_balance|format_currency if item.debit_balance > 0 else '' }}</td>
+                                    <td class="text-end">{{ item.credit_balance|format_currency if item.credit_balance > 0 else '' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-dark fw-bold">
+                                <tr>
+                                    <td colspan="3" class="text-end">Totals</td>
+                                    <td class="text-end">{{ total_debits|format_currency }}</td>
+                                    <td class="text-end">{{ total_credits|format_currency }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    
+                    {% if total_debits == total_credits %}
+                        <div class="alert alert-success mt-3">
+                            <i class="fas fa-check-circle me-2"></i> The trial balance is balanced. Debits and Credits both equal {{ total_debits|format_currency }}.
+                        </div>
+                    {% else %}
+                        <div class="alert alert-danger mt-3">
+                            <i class="fas fa-exclamation-circle me-2"></i> The trial balance is not balanced. There is a difference of {{ (total_debits - total_credits)|abs|format_currency }}.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between mt-3">
+                <a href="{{ url_for('accounting.general_ledger') }}" class="btn btn-secondary">Back to General Ledger</a>
+                <div>
+                    <button class="btn btn-success" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i> Print
+                    </button>
+                    <a href="#" class="btn btn-primary">
+                        <i class="fas fa-file-pdf me-1"></i> Export PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Any JavaScript specific to trial balance can go here
+    });
+</script>
+{% endblock %}
