@@ -1,0 +1,144 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card">
+        <div class="card-body">
+            <h3 class="card-title mb-4">{{ title }}</h3>
+            
+            <form method="POST">
+                {{ form.csrf_token }}
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="project_id" class="form-label">Project*</label>
+                        {{ form.project_id(class="form-select") }}
+                        {% if form.project_id.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.project_id.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="milestone_id" class="form-label">Milestone</label>
+                        {{ form.milestone_id(class="form-select") }}
+                        {% if form.milestone_id.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.milestone_id.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="amount_original" class="form-label">Original Amount*</label>
+                        {{ form.amount_original(class="form-control") }}
+                        {% if form.amount_original.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.amount_original.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="currency_original" class="form-label">Original Currency*</label>
+                        {{ form.currency_original(class="form-select") }}
+                        {% if form.currency_original.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.currency_original.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="platform_fee" class="form-label">Platform Fee</label>
+                        {{ form.platform_fee(class="form-control") }}
+                        {% if form.platform_fee.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.platform_fee.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label for="conversion_fee" class="form-label">Conversion Fee</label>
+                        {{ form.conversion_fee(class="form-control") }}
+                        {% if form.conversion_fee.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.conversion_fee.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label for="conversion_rate" class="form-label">Conversion Rate</label>
+                        {{ form.conversion_rate(class="form-control") }}
+                        {% if form.conversion_rate.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.conversion_rate.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="payment_date" class="form-label">Payment Date</label>
+                        {{ form.payment_date(class="form-control", type="date") }}
+                        {% if form.payment_date.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.payment_date.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="status" class="form-label">Status*</label>
+                        {{ form.status(class="form-select") }}
+                        {% if form.status.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.status.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="notes" class="form-label">Notes</label>
+                    {{ form.notes(class="form-control") }}
+                    {% if form.notes.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.notes.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="mt-4">
+                    {{ form.submit(class="btn btn-primary") }}
+                    <a href="{{ url_for('project_management.payments') }}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
