@@ -31,8 +31,8 @@ def employees():
 
 @hr_bp.route('/employees/new', methods=['GET', 'POST'])
 def new_employee():
-    if not current_user.is_admin:
-        flash('Access denied. Admin privileges required.', 'danger')
+    if not current_user.is_admin and not current_user.department == 'hr':
+        flash('Access denied. Admin or HR privileges required.', 'danger')
         return redirect(url_for('hr.employees'))
     
     form = EmployeeForm()
@@ -68,8 +68,8 @@ def employee_detail(id):
 
 @hr_bp.route('/employees/<int:id>/edit', methods=['GET', 'POST'])
 def edit_employee(id):
-    if not current_user.is_admin:
-        flash('Access denied. Admin privileges required.', 'danger')
+    if not current_user.is_admin and not current_user.department == 'hr':
+        flash('Access denied. Admin or HR privileges required.', 'danger')
         return redirect(url_for('hr.employees'))
     
     employee = Employee.query.get_or_404(id)
@@ -93,8 +93,8 @@ def edit_employee(id):
 
 @hr_bp.route('/employees/<int:id>/delete', methods=['POST'])
 def delete_employee(id):
-    if not current_user.is_admin:
-        flash('Access denied. Admin privileges required.', 'danger')
+    if not current_user.is_admin and not current_user.department == 'hr':
+        flash('Access denied. Admin or HR privileges required.', 'danger')
         return redirect(url_for('hr.employees'))
     
     employee = Employee.query.get_or_404(id)
@@ -106,8 +106,8 @@ def delete_employee(id):
 
 @hr_bp.route('/employees/export')
 def export_employees():
-    if not current_user.is_admin:
-        flash('Access denied. Admin privileges required.', 'danger')
+    if not current_user.is_admin and not current_user.department == 'hr':
+        flash('Access denied. Admin or HR privileges required.', 'danger')
         return redirect(url_for('hr.employees'))
     
     employees = Employee.query.all()
@@ -128,8 +128,8 @@ def export_employees():
 
 @hr_bp.route('/employees/report')
 def employee_report():
-    if not current_user.is_admin:
-        flash('Access denied. Admin privileges required.', 'danger')
+    if not current_user.is_admin and not current_user.department == 'hr':
+        flash('Access denied. Admin or HR privileges required.', 'danger')
         return redirect(url_for('hr.employees'))
     
     employees = Employee.query.all()
@@ -160,7 +160,9 @@ def leaves():
 @hr_bp.route('/leaves/new', methods=['GET', 'POST'])
 def new_leave():
     employee = None
-    if not current_user.is_admin:
+    is_hr_or_admin = current_user.is_admin or current_user.department == 'hr'
+    
+    if not is_hr_or_admin:
         employee = Employee.query.filter_by(user_id=current_user.id).first()
         if not employee:
             flash('You are not registered as an employee.', 'warning')
@@ -168,21 +170,21 @@ def new_leave():
     
     form = LeaveForm()
     
-    if current_user.is_admin:
+    if is_hr_or_admin:
         form.employee_id.choices = [(e.id, e.full_name) for e in Employee.query.all()]
     else:
-        # For non-admin users, only allow them to select their own employee record
+        # For regular users, only allow them to select their own employee record
         form.employee_id.choices = [(employee.id, employee.full_name)]
         form.employee_id.data = employee.id
     
     if form.validate_on_submit():
         leave = Leave(
-            employee_id=form.employee_id.data if current_user.is_admin else employee.id,
+            employee_id=form.employee_id.data if is_hr_or_admin else employee.id,
             leave_type=form.leave_type.data,
             start_date=form.start_date.data,
             end_date=form.end_date.data,
             reason=form.reason.data,
-            status='approved' if current_user.is_admin else 'pending'
+            status='approved' if is_hr_or_admin else 'pending'
         )
         db.session.add(leave)
         db.session.commit()
