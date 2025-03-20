@@ -104,12 +104,25 @@ def create_test_payment(project_id):
         db.session.commit()
         print(f"Created test payment for project {project.name}: ${payment.amount_original} (received: ${payment.amount_received})")
         
+        # Manually update the sales record (simulating what the route handler does)
+        print("Manually updating sales record...")
+        sale = Sales.query.filter_by(project_id=project.id).first()
+        if sale:
+            print(f"Current sales record - received: ${sale.received_amount}, difference: ${sale.difference}")
+            # Update received amount
+            sale.received_amount += payment.amount_received
+            sale.calculate_difference()
+            payment.is_recorded_in_sales = True
+            db.session.commit()
+            print(f"Updated sales record - received: ${sale.received_amount}, difference: ${sale.difference}")
+        
         # Check sales record update
         sale = Sales.query.filter_by(project_id=project.id).first()
         if sale:
             print(f"Sales record updated - received amount: ${sale.received_amount}, difference: ${sale.difference}")
         
-        return payment
+        # Return payment ID instead of the detached object
+        return payment.id
 
 def close_test_sales(project_id):
     """Force close a project's sales record"""
@@ -147,7 +160,7 @@ if __name__ == "__main__":
                 project_id = int(sys.argv[2])
                 print(f"Creating test payment for project ID: {project_id}...")
                 payment = create_test_payment(project_id)
-                print(f"Created payment with ID: {payment.id if payment else 'None'}")
+                print(f"Created payment with ID: {payment if payment else 'None'}")
                 sys.exit(0)
             except ValueError:
                 print(f"Invalid project ID: {sys.argv[2]}")
