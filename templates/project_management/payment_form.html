@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 
 {% block content %}
@@ -6,14 +5,14 @@
     <div class="card">
         <div class="card-body">
             <h3 class="card-title mb-4">{{ title }}</h3>
-            
+
             <form method="POST">
                 {{ form.csrf_token }}
-                
+
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label for="project_id" class="form-label">Project*</label>
-                        {{ form.project_id(class="form-select") }}
+                        {{ form.project_id(class="form-select", id="project_id") }}
                         {% if form.project_id.errors %}
                         <div class="invalid-feedback d-block">
                             {% for error in form.project_id.errors %}
@@ -24,7 +23,7 @@
                     </div>
                     <div class="col-md-6">
                         <label for="milestone_id" class="form-label">Milestone</label>
-                        {{ form.milestone_id(class="form-select") }}
+                        {{ form.milestone_id(class="form-select", id="milestone_id") }}
                         {% if form.milestone_id.errors %}
                         <div class="invalid-feedback d-block">
                             {% for error in form.milestone_id.errors %}
@@ -141,4 +140,27 @@
         </div>
     </div>
 </div>
+
+<script>
+document.getElementById('project_id').addEventListener('change', function() {
+    const projectId = this.value;
+    const milestoneSelect = document.getElementById('milestone_id');
+
+    // Clear current options
+    milestoneSelect.innerHTML = '<option value="">Select a milestone</option>';
+
+    if (projectId) {
+        fetch(`/api/projects/${projectId}/milestones`)
+            .then(response => response.json())
+            .then(milestones => {
+                milestones.forEach(milestone => {
+                    const option = document.createElement('option');
+                    option.value = milestone.id;
+                    option.textContent = milestone.name;
+                    milestoneSelect.appendChild(option);
+                });
+            });
+    }
+});
+</script>
 {% endblock %}

@@ -569,3 +569,8 @@ def delete_payment(id):
     
     flash('Payment deleted successfully!', 'success')
     return redirect(url_for('project_management.project_payments', project_id=project_id))
+@project_bp.route('/api/projects/<int:project_id>/milestones')
+@login_required
+def get_project_milestones(project_id):
+    milestones = ProjectMilestone.query.filter_by(project_id=project_id).all()
+    return jsonify([{'id': m.id, 'name': m.name} for m in milestones])
