@@ -1,9 +1,13 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from app import db
-from models import Project, Task, User, Employee
-from blueprints.project_management.forms import ProjectForm, TaskForm
+from models import Project, Task, User, Employee, ClientUser, ProjectMilestone, ProjectPayment, Account
+from blueprints.project_management.forms import (
+    ProjectForm, TaskForm, ClientUserForm, ProjectMilestoneForm, 
+    ProjectPaymentForm, AccountForm
+)
 from utils import generate_csv, generate_pdf
+from decimal import Decimal
 
 project_bp = Blueprint('project_management', __name__, url_prefix='')
 

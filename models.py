@@ -85,20 +85,59 @@ class Payroll(db.Model):
     def __repr__(self):
         return f'<Payroll {self.payment_date} - {self.status}>'
 
+class Account(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    account_type = db.Column(db.String(50), nullable=False)  # bank, paypal, etc.
+    currency = db.Column(db.String(3), default='USD')
+    description = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    project_payments = db.relationship('ProjectPayment', backref='account', lazy=True)
+    
+    def __repr__(self):
+        return f'<Account {self.name}>'
+
+class ClientUser(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120))
+    platform = db.Column(db.String(50))  # Fiverr, Upwork, etc.
+    platform_username = db.Column(db.String(100))
+    is_existing_user = db.Column(db.Boolean, default=False)
+    existing_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    projects = db.relationship('Project', backref='client_user', lazy=True)
+    existing_user = db.relationship('User', backref='client_profiles', lazy=True)
+    
+    def __repr__(self):
+        return f'<ClientUser {self.name}>'
+
 class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
     client = db.Column(db.String(100))
+    client_user_id = db.Column(db.Integer, db.ForeignKey('client_user.id'), nullable=True)
+    platform = db.Column(db.String(50), default='other')  # fiverr, upwork, other
+    platform_project_id = db.Column(db.String(100))  # ID from the platform
     start_date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date)
     status = db.Column(db.String(20), default='planning')  # planning, in-progress, completed, on-hold
     budget = db.Column(db.Numeric(10, 2))
+    payment_status = db.Column(db.String(50), default='pending')  # pending, in-review, in-platform, transferred
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     tasks = db.relationship('Task', backref='project', lazy=True, cascade='all, delete-orphan')
+    milestones = db.relationship('ProjectMilestone', backref='project', lazy=True, cascade='all, delete-orphan')
+    payments = db.relationship('ProjectPayment', backref='project', lazy=True)
     
     @property
     def progress(self):
@@ -109,6 +148,44 @@ class Project(db.Model):
     
     def __repr__(self):
         return f'<Project {self.name}>'
+
+class ProjectMilestone(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    due_date = db.Column(db.Date, nullable=False)
+    amount = db.Column(db.Numeric(10, 2), nullable=False)
+    status = db.Column(db.String(20), default='pending')  # pending, completed, paid
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<ProjectMilestone {self.name}>'
+
+class ProjectPayment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
+    milestone_id = db.Column(db.Integer, db.ForeignKey('project_milestone.id'), nullable=True)
+    account_id = db.Column(db.Integer, db.ForeignKey('account.id'), nullable=True)
+    amount_original = db.Column(db.Numeric(10, 2), nullable=False)
+    currency_original = db.Column(db.String(3), default='USD')
+    platform_fee = db.Column(db.Numeric(10, 2), default=0)
+    conversion_fee = db.Column(db.Numeric(10, 2), default=0)
+    conversion_rate = db.Column(db.Numeric(10, 6), default=1)
+    amount_received = db.Column(db.Numeric(10, 2))
+    currency_received = db.Column(db.String(3), default='USD')
+    payment_date = db.Column(db.Date)
+    status = db.Column(db.String(20), default='pending')  # pending, in-review, in-platform, transferred, reconciled
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    milestone = db.relationship('ProjectMilestone', backref='payment', uselist=False)
+    
+    def __repr__(self):
+        return f'<ProjectPayment {self.amount_original} {self.currency_original}>'
 
 class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
