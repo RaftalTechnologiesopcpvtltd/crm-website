@@ -14,7 +14,8 @@ class RegistrationForm(FlaskForm):
     email = EmailField('Email', validators=[DataRequired(), Email(), Length(max=120)])
     password = PasswordField('Password', validators=[DataRequired(), Length(min=8)])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
-    submit = SubmitField('Register')
+    is_admin = BooleanField('Admin Privileges')
+    submit = SubmitField('Add User')
     
     def validate_username(self, username):
         user = User.query.filter_by(username=username.data).first()

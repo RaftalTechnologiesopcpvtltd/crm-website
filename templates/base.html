@@ -80,6 +80,14 @@
                         {% endif %}
                         
                         <hr>
+                        {% if current_user.is_admin %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'accounts.user_list' == request.endpoint %}active{% endif %}" href="{{ url_for('accounts.user_list') }}">
+                                <i class="fas fa-users-cog me-2"></i>
+                                User Management
+                            </a>
+                        </li>
+                        {% endif %}
                         <li class="nav-item">
                             <a class="nav-link {% if 'accounts.profile' == request.endpoint %}active{% endif %}" href="{{ url_for('accounts.profile') }}">
                                 <i class="fas fa-user-circle me-2"></i>

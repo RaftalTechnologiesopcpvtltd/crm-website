@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}User Management{% endblock %}
+
+{% block header %}User Management{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group me-2">
+    <a href="{{ url_for('accounts.add_user') }}" class="btn btn-sm btn-primary">
+        <i class="fas fa-user-plus me-1"></i> Add User
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">System Users</h5>
+        {% if users %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Created Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            {% if user.is_admin %}
+                            <span class="badge bg-danger">Admin</span>
+                            {% else %}
+                            <span class="badge bg-primary">User</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ user.created_at | formatdate }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-secondary" disabled>
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-danger" disabled>
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted">No users found in the system.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

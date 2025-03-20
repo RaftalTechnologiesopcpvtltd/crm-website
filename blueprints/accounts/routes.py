@@ -25,25 +25,29 @@ def login():
     
     return render_template('accounts/login.html', form=form)
 
-@accounts_bp.route('/register', methods=['GET', 'POST'])
-def register():
-    if current_user.is_authenticated:
+@accounts_bp.route('/add_user', methods=['GET', 'POST'])
+@login_required
+def add_user():
+    # Only admin users can add new users
+    if not current_user.is_admin:
+        flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('project_management.dashboard'))
     
     form = RegistrationForm()
     if form.validate_on_submit():
         user = User(
             username=form.username.data,
-            email=form.email.data
+            email=form.email.data,
+            is_admin=form.is_admin.data if hasattr(form, 'is_admin') else False
         )
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
         
-        flash('Registration successful! You can now log in.', 'success')
-        return redirect(url_for('accounts.login'))
+        flash('User added successfully!', 'success')
+        return redirect(url_for('accounts.user_list'))
     
-    return render_template('accounts/register.html', form=form)
+    return render_template('accounts/register.html', form=form, admin_view=True)
 
 @accounts_bp.route('/logout')
 @login_required
