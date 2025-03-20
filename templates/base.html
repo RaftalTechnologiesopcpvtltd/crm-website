@@ -48,6 +48,14 @@
                                 Tasks
                             </a>
                         </li>
+                        {% if current_user.is_admin %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'project_management.sales' == request.endpoint %}active{% endif %}" href="{{ url_for('project_management.sales') }}">
+                                <i class="fas fa-coins me-2"></i>
+                                Sales
+                            </a>
+                        </li>
+                        {% endif %}
                         
                         <hr>
                         <li class="nav-item">

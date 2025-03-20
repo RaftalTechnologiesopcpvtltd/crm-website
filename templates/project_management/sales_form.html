@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Employee Management System{% endblock %}
+
+{% block header %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 col-lg-6 mx-auto">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">Sales Record Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.project_id.label(class="form-label") }}
+                        {{ form.project_id(class="form-select") }}
+                        {% if form.project_id.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.project_id.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.total_amount.label(class="form-label") }}
+                        <div class="input-group">
+                            <span class="input-group-text">{{ form.currency.data }}</span>
+                            {{ form.total_amount(class="form-control" + (" is-invalid" if form.total_amount.errors else "")) }}
+                        </div>
+                        {% if form.total_amount.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.total_amount.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.received_amount.label(class="form-label") }}
+                        <div class="input-group">
+                            <span class="input-group-text">{{ form.currency.data }}</span>
+                            {{ form.received_amount(class="form-control" + (" is-invalid" if form.received_amount.errors else "")) }}
+                        </div>
+                        {% if form.received_amount.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.received_amount.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">The received amount is normally updated automatically through payments</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.currency.label(class="form-label") }}
+                        {{ form.currency(class="form-select" + (" is-invalid" if form.currency.errors else "")) }}
+                        {% if form.currency.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.currency.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.status.label(class="form-label") }}
+                        {{ form.status(class="form-select" + (" is-invalid" if form.status.errors else "")) }}
+                        {% if form.status.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.status.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        {% if sale and sale.status == 'open' %}
+                            <div class="form-text">Setting status to 'closed' will finalize the difference amount</div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if sale and sale.status == 'closed' and sale.closed_date %}
+                    <div class="mb-3">
+                        {{ form.closed_date.label(class="form-label") }}
+                        {{ form.closed_date(class="form-control" + (" is-invalid" if form.closed_date.errors else ""), type="date") }}
+                        {% if form.closed_date.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.closed_date.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        {{ form.notes.label(class="form-label") }}
+                        {{ form.notes(class="form-control" + (" is-invalid" if form.notes.errors else ""), rows=3) }}
+                        {% if form.notes.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.notes.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        {% if sale %}
+                            <a href="{{ url_for('project_management.sales_detail', id=sale.id) }}" class="btn btn-secondary">Cancel</a>
+                        {% else %}
+                            <a href="{{ url_for('project_management.sales') }}" class="btn btn-secondary">Cancel</a>
+                        {% endif %}
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Convert decimal values to proper display format
+        const currencyInputs = document.querySelectorAll('input[type="number"][step="0.01"]');
+        currencyInputs.forEach(input => {
+            if (input.value) {
+                input.value = parseFloat(input.value).toFixed(2);
+            }
+        });
+    });
+</script>
+{% endblock %}
