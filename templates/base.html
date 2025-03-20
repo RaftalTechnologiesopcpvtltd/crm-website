@@ -8,7 +8,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
     <title>{% block title %}Employee Management System{% endblock %}</title>
     
-    <!-- Bootstrap CSS -->
+    <!-- Bootstrap CSS & JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
     
     <!-- Font Awesome -->
@@ -99,6 +101,18 @@
                                             <i class="fas fa-file-invoice-dollar me-2"></i>
                                             Financial Statements
                                             <i class="fas fa-caret-down float-end mt-1"></i>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if 'accounting.tax_config' == request.endpoint %}active{% endif %}" href="{{ url_for('accounting.tax_config') }}">
+                                            <i class="fas fa-percentage me-2"></i>
+                                            Tax Configuration
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if 'accounting.year_end' == request.endpoint %}active{% endif %}" href="{{ url_for('accounting.year_end') }}">
+                                            <i class="fas fa-calendar-check me-2"></i>
+                                            Year End Closing
                                         </a>
                                         <div class="collapse {% if 'accounting.balance_sheet' == request.endpoint or 'accounting.income_statement' == request.endpoint or 'accounting.trial_balance' == request.endpoint %}show{% endif %}" id="financialStatementsSubmenu">
                                             <ul class="nav flex-column ps-3">

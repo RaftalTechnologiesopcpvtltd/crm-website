@@ -1,0 +1,54 @@
+
+{% extends "base.html" %}
+
+{% block title %}Year End Closing{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4">Year End Closing Process</h1>
+    
+    <div class="card shadow mb-4">
+        <div class="card-header">
+            <h6 class="m-0 font-weight-bold text-primary">Closing Checklist</h6>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> This process will close the current fiscal year and create opening balances for the next year.
+            </div>
+            
+            <form method="POST" id="yearEndForm">
+                <div class="list-group mb-4">
+                    <div class="list-group-item">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="check1" required>
+                            <label class="form-check-label" for="check1">
+                                All transactions have been posted
+                            </label>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="check2" required>
+                            <label class="form-check-label" for="check2">
+                                Bank reconciliation completed
+                            </label>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="check3" required>
+                            <label class="form-check-label" for="check3">
+                                All adjusting entries recorded
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" id="closeYearBtn">
+                    <i class="fas fa-lock"></i> Close Fiscal Year
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
