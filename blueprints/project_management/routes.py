@@ -775,6 +775,47 @@ def edit_payment(id):
                     sale.received_amount += payment.amount_received
                     sale.calculate_difference()
                     payment.is_recorded_in_sales = True
+                    
+                    # Create accounting journal entry for payment (if accounting module is enabled)
+                    try:
+                        from blueprints.accounting.routes import create_journal_entry
+                        from models_accounting import ChartOfAccount
+                        
+                        # Find appropriate accounts
+                        cash_account = ChartOfAccount.query.filter_by(name='Cash').first()
+                        ar_account = ChartOfAccount.query.filter_by(name='Accounts Receivable').first()
+                        
+                        if cash_account and ar_account:
+                            # Prepare line items
+                            line_items = [
+                                # Debit Cash
+                                {
+                                    'account_id': cash_account.id,
+                                    'debit_amount': float(payment.amount_received),
+                                    'credit_amount': 0,
+                                    'description': f'Payment received for project {project.name}'
+                                },
+                                # Credit Accounts Receivable
+                                {
+                                    'account_id': ar_account.id,
+                                    'debit_amount': 0,
+                                    'credit_amount': float(payment.amount_received),
+                                    'description': f'Payment received for project {project.name}'
+                                }
+                            ]
+                            
+                            # Create journal entry
+                            create_journal_entry(
+                                entry_type='PAYMENT',
+                                transaction_date=payment.payment_date or datetime.now().date(),
+                                reference=f'PMT-{payment.id}',
+                                memo=f'Payment for project: {project.name}',
+                                line_items=line_items,
+                                user_id=current_user.id
+                            )
+                    except Exception as e:
+                        # Log error but don't prevent payment update if accounting fails
+                        print(f"Error creating accounting entry for edited payment: {str(e)}")
             
             db.session.commit()
         
@@ -799,6 +840,48 @@ def delete_payment(id):
         if sale:
             sale.received_amount -= payment.amount_received
             sale.calculate_difference()
+            
+            # Create reversing journal entry for the deleted payment
+            try:
+                from blueprints.accounting.routes import create_journal_entry
+                from models_accounting import ChartOfAccount
+                
+                # Find appropriate accounts
+                cash_account = ChartOfAccount.query.filter_by(name='Cash').first()
+                ar_account = ChartOfAccount.query.filter_by(name='Accounts Receivable').first()
+                
+                if cash_account and ar_account:
+                    # Prepare line items - note the reversed debits/credits
+                    line_items = [
+                        # Credit Cash (reverse the debit)
+                        {
+                            'account_id': cash_account.id,
+                            'debit_amount': 0,
+                            'credit_amount': float(payment.amount_received),
+                            'description': f'Reversal of payment for project {payment.project.name}'
+                        },
+                        # Debit Accounts Receivable (reverse the credit)
+                        {
+                            'account_id': ar_account.id,
+                            'debit_amount': float(payment.amount_received),
+                            'credit_amount': 0,
+                            'description': f'Reversal of payment for project {payment.project.name}'
+                        }
+                    ]
+                    
+                    # Create reversal journal entry
+                    create_journal_entry(
+                        entry_type='REVERSAL',
+                        transaction_date=date.today(),
+                        reference=f'REV-PMT-{payment.id}',
+                        memo=f'Reversal of deleted payment for project: {payment.project.name}',
+                        line_items=line_items,
+                        user_id=current_user.id
+                    )
+            except Exception as e:
+                # Log error but don't prevent payment deletion if accounting fails
+                print(f"Error creating reversal accounting entry for deleted payment: {str(e)}")
+                
             db.session.commit()  # Save the sales update first
     
     db.session.delete(payment)
