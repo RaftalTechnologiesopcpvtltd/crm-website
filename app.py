@@ -84,6 +84,11 @@ def create_app():
     def time_remaining_filter(due_date):
         from utils import get_time_remaining
         return get_time_remaining(due_date)
+        
+    @app.template_filter('format_currency')
+    def format_currency_filter(value):
+        from utils import format_currency
+        return format_currency(value)
     
     # Context processors
     @app.context_processor
