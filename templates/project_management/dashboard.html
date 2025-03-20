@@ -394,7 +394,7 @@
                                     <i class="fas fa-calendar-alt widget-icon bg-info"></i>
                                     <div class="widget-content">
                                         <h5>Leave Management</h5>
-                                        <p>{% if department_data.hr.pending_leaves > 0 %}<span class="badge bg-warning">{{ department_data.hr.pending_leaves }} pending</span>{% else %}Manage leave requests{% endif %}</p>
+                                        <p>{% if department_data.hr.pending_leaves > 0 %}<span class="badge bg-warning"><span id="pending-leaves-count" sse-swap="department_data.hr.pending_leaves">{{ department_data.hr.pending_leaves }}</span> pending</span>{% else %}Manage leave requests{% endif %}</p>
                                         <a href="{{ url_for('hr.leaves') }}" class="btn btn-sm btn-info">Manage Leaves</a>
                                     </div>
                                 </div>
@@ -487,7 +487,7 @@
                             <div class="stats-item">
                                 <i class="fas fa-hourglass-half text-warning"></i>
                                 <span class="stats-label">Pending Payments:</span>
-                                <span class="stats-value">{{ department_data.accounting.pending_payments }}</span>
+                                <span class="stats-value" id="pending-payments" sse-swap="department_data.accounting.pending_payments">{{ department_data.accounting.pending_payments }}</span>
                             </div>
                             <div class="stats-item">
                                 <i class="fas fa-money-bill-alt text-danger"></i>
@@ -580,7 +580,7 @@
                             <div class="stats-item">
                                 <i class="fas fa-exclamation-triangle text-danger"></i>
                                 <span class="stats-label">Urgent Tasks:</span>
-                                <span class="stats-value">{{ department_data.developer.urgent_tasks }}</span>
+                                <span class="stats-value" id="urgent-tasks" sse-swap="department_data.developer.urgent_tasks">{{ department_data.developer.urgent_tasks }}</span>
                             </div>
                             <div class="stats-item">
                                 <i class="fas fa-check-double text-success"></i>
@@ -655,20 +655,95 @@
                 <div class="row mt-3">
                     <div class="col-12">
                         <h5>My Task Progress</h5>
-                        <div class="progress mb-3" style="height: 25px;">
+                        <div class="progress mb-3" style="height: 25px;" id="task-progress" 
+                             hx-get="/api/dashboard-updates" 
+                             hx-trigger="load, every 10s"
+                             hx-swap="none">
                             <div class="progress-bar bg-success" role="progressbar" style="width: {{ completed_tasks / total_tasks * 100 if total_tasks > 0 else 0 }}%;" 
                                  aria-valuenow="{{ completed_tasks }}" aria-valuemin="0" aria-valuemax="{{ total_tasks }}">
-                                 {{ completed_tasks }} Completed
+                                 <span id="completed-count">{{ completed_tasks }}</span> Completed
                             </div>
                             <div class="progress-bar bg-warning" role="progressbar" style="width: {{ in_progress_tasks / total_tasks * 100 if total_tasks > 0 else 0 }}%;" 
                                  aria-valuenow="{{ in_progress_tasks }}" aria-valuemin="0" aria-valuemax="{{ total_tasks }}">
-                                 {{ in_progress_tasks }} In Progress
+                                 <span id="in-progress-count">{{ in_progress_tasks }}</span> In Progress
                             </div>
                             <div class="progress-bar bg-info" role="progressbar" style="width: {{ todo_tasks / total_tasks * 100 if total_tasks > 0 else 0 }}%;" 
                                  aria-valuenow="{{ todo_tasks }}" aria-valuemin="0" aria-valuemax="{{ total_tasks }}">
-                                 {{ todo_tasks }} To-Do
+                                 <span id="todo-count">{{ todo_tasks }}</span> To-Do
                             </div>
                         </div>
+                        
+                        <!-- Script for real-time updating of progress bars and dashboard elements -->
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                // Handle API responses for dashboard updates
+                                htmx.on('#task-progress', 'htmx:afterRequest', function(event) {
+                                    if (event.detail.successful && event.detail.xhr.status === 200) {
+                                        try {
+                                            const data = JSON.parse(event.detail.xhr.responseText);
+                                            
+                                            // Update urgent tasks count for developers
+                                            if (data.department_data && data.department_data.developer) {
+                                                const urgentTaskElement = document.getElementById('urgent-tasks');
+                                                if (urgentTaskElement) {
+                                                    urgentTaskElement.textContent = data.department_data.developer.urgent_tasks;
+                                                }
+                                            }
+                                            
+                                            // Update pending payments for accounting
+                                            if (data.department_data && data.department_data.accounting) {
+                                                const pendingPaymentsElement = document.getElementById('pending-payments');
+                                                if (pendingPaymentsElement) {
+                                                    pendingPaymentsElement.textContent = data.department_data.accounting.pending_payments;
+                                                }
+                                            }
+                                            
+                                            // Update pending leaves for HR
+                                            if (data.department_data && data.department_data.hr) {
+                                                const pendingLeavesElement = document.getElementById('pending-leaves-count');
+                                                if (pendingLeavesElement) {
+                                                    pendingLeavesElement.textContent = data.department_data.hr.pending_leaves;
+                                                }
+                                            }
+                                            
+                                            // Update task progress
+                                            const totalTasks = data.task_count || 0;
+                                            if (totalTasks <= 0) return;
+                                            
+                                            // Update global counters
+                                            const taskCountElement = document.getElementById('task-count'); 
+                                            if (taskCountElement) {
+                                                taskCountElement.textContent = totalTasks;
+                                            }
+                                            
+                                            const completedTasksCountElement = document.getElementById('completed-tasks-count');
+                                            if (completedTasksCountElement) {
+                                                completedTasksCountElement.textContent = data.completed_tasks;
+                                            }
+                                            
+                                            // Update the count spans in progress bars
+                                            document.getElementById('completed-count').textContent = data.completed_tasks;
+                                            document.getElementById('in-progress-count').textContent = data.in_progress_tasks;
+                                            document.getElementById('todo-count').textContent = data.todo_tasks;
+                                            
+                                            // Calculate new percentages
+                                            const completedPercent = (data.completed_tasks / totalTasks * 100).toFixed(0) + '%';
+                                            const inProgressPercent = (data.in_progress_tasks / totalTasks * 100).toFixed(0) + '%';
+                                            const todoPercent = (data.todo_tasks / totalTasks * 100).toFixed(0) + '%';
+                                            
+                                            // Update the progress bar widths
+                                            const progressBars = document.querySelectorAll('#task-progress .progress-bar');
+                                            progressBars[0].style.width = completedPercent;
+                                            if (progressBars[1]) progressBars[1].style.width = inProgressPercent;
+                                            if (progressBars[2]) progressBars[2].style.width = todoPercent;
+                                            
+                                        } catch (err) {
+                                            console.error('Error updating dashboard:', err);
+                                        }
+                                    }
+                                });
+                            });
+                        </script>
                     </div>
                 </div>
             </div>

@@ -1268,22 +1268,57 @@ def api_dashboard_stats():
     
     return jsonify(response_data)
 
-@project_bp.route('/api/dashboard-stream')
+@project_bp.route('/api/dashboard-updates')
 @login_required
-def dashboard_stream():
-    """Server-sent events endpoint for real-time dashboard updates"""
-    def generate():
-        while True:
-            # Get the latest dashboard stats
-            stats = get_dashboard_stats_for_user(current_user)
-            
-            # Format as SSE
-            yield f"data: {json.dumps(stats)}\n\n"
-            
-            # Send updates every 5 seconds
-            time.sleep(5)
-    
-    return Response(generate(), content_type='text/event-stream')
+def dashboard_updates():
+    """API endpoint for dashboard updates - HTMX will poll this endpoint"""
+    try:
+        # Get dashboard stats for current user
+        user_id = current_user.id
+        is_admin = current_user.is_admin
+        department = current_user.department
+        
+        # Task statistics
+        user_tasks = Task.query.filter_by(user_id=user_id).count()
+        completed_tasks = Task.query.filter_by(user_id=user_id, status='completed').count()
+        in_progress_tasks = Task.query.filter_by(user_id=user_id, status='in-progress').count()
+        todo_tasks = Task.query.filter_by(user_id=user_id, status='to-do').count()
+        
+        # Basic data structure
+        data = {
+            'task_count': user_tasks,
+            'completed_tasks': completed_tasks,
+            'in_progress_tasks': in_progress_tasks,
+            'todo_tasks': todo_tasks,
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'department_data': {}
+        }
+        
+        # Department-specific data
+        if department == 'hr' or is_admin:
+            data['department_data']['hr'] = {
+                'pending_leaves': Leave.query.filter_by(status='pending').count(),
+                'attendance_today': Attendance.query.filter_by(date=datetime.now().date()).count()
+            }
+        
+        if department == 'accounting' or is_admin:
+            data['department_data']['accounting'] = {
+                'pending_payments': ProjectPayment.query.filter(
+                    ProjectPayment.status.in_(['pending', 'in-review'])
+                ).count()
+            }
+        
+        if department == 'developer' or is_admin:
+            data['department_data']['developer'] = {
+                'urgent_tasks': Task.query.filter_by(user_id=user_id, priority='urgent').count(),
+                'in_review_tasks': Task.query.filter_by(user_id=user_id, status='in-review').count(),
+                'assigned_tasks': user_tasks
+            }
+        
+        return jsonify(data)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 def get_dashboard_stats_for_user(user):
     """Get dashboard statistics for a specific user"""
