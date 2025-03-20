@@ -77,12 +77,28 @@
                         
                         {% if project.end_date %}
                         <div class="card mb-3">
-                            <div class="card-body">
-                                <h6 class="fw-bold mb-2">Deadline Timer</h6>
-                                {% set time_info = project.end_date | time_remaining %}
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-clock me-2"></i>
-                                    <span class="{{ time_info.css_class }}">{{ time_info.time_str }}</span>
+                            <div class="card-body text-center">
+                                <h5 class="mb-4">Time left to deliver</h5>
+                                <div class="time-blocks d-flex justify-content-center gap-4 mb-4" data-deadline="{{ project.end_date }}">
+                                    <div class="time-block">
+                                        <div class="time-value days">00</div>
+                                        <div class="time-label">Days</div>
+                                    </div>
+                                    <div class="time-divider">:</div>
+                                    <div class="time-block">
+                                        <div class="time-value hours">00</div>
+                                        <div class="time-label">Hours</div>
+                                    </div>
+                                    <div class="time-divider">:</div>
+                                    <div class="time-block">
+                                        <div class="time-value minutes">00</div>
+                                        <div class="time-label">Minutes</div>
+                                    </div>
+                                    <div class="time-divider">:</div>
+                                    <div class="time-block">
+                                        <div class="time-value seconds">00</div>
+                                        <div class="time-label">Seconds</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
