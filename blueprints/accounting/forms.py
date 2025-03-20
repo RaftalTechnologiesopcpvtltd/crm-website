@@ -63,7 +63,7 @@ class JournalEntryLineForm(FlaskForm):
     description = TextAreaField('Description', validators=[Optional()])
     debit_amount = DecimalField('Debit', places=2, validators=[Optional()], default=Decimal('0.00'))
     credit_amount = DecimalField('Credit', places=2, validators=[Optional()], default=Decimal('0.00'))
-    submit = SubmitField('Add Line')
+    submit = SubmitField('Add Line Item')
     
     def validate(self):
         if not super(JournalEntryLineForm, self).validate():
