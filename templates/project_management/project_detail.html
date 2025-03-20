@@ -77,11 +77,41 @@
                         
                         {% if project.end_date %}
                         <h6 class="fw-bold">Deadline Timer</h6>
-                        {% set time_info = project.end_date | time_remaining %}
-                        <p class="{{ time_info.css_class }} fw-bold">
+                        <p id="deadline-timer" class="fw-bold">
                             <i class="fas fa-clock me-1"></i>
-                            {{ time_info.time_str }}
+                            <span id="timer-text"></span>
                         </p>
+                        <script>
+                            function updateTimer() {
+                                const endDate = new Date("{{ project.end_date }}");
+                                const now = new Date();
+                                const diff = endDate - now;
+                                
+                                let timerText = '';
+                                let cssClass = '';
+                                
+                                if (diff > 0) {
+                                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                                    
+                                    timerText = `${days}d ${hours}h ${minutes}m ${seconds}s remaining`;
+                                    cssClass = days < 7 ? 'text-warning' : 'text-success';
+                                } else {
+                                    timerText = 'Deadline passed';
+                                    cssClass = 'text-danger';
+                                }
+                                
+                                const timerElement = document.getElementById('deadline-timer');
+                                const timerTextElement = document.getElementById('timer-text');
+                                timerElement.className = `fw-bold ${cssClass}`;
+                                timerTextElement.textContent = timerText;
+                            }
+                            
+                            updateTimer();
+                            setInterval(updateTimer, 1000);
+                        </script>
                         {% endif %}
                         
                         <h6 class="fw-bold">Budget</h6>
