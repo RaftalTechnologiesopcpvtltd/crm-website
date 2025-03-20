@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from app import db
-from models import Project, Task, User, Employee, ClientUser, ProjectMilestone, ProjectPayment, Account, Sales
+from models import Project, Task, User, Employee, ClientUser, ProjectMilestone, ProjectPayment, Account, Sales, Leave, Payroll
 from blueprints.project_management.forms import (
     ProjectForm, TaskForm, ClientUserForm, ProjectMilestoneForm, 
     ProjectPaymentForm, AccountForm, SalesForm
@@ -9,6 +9,7 @@ from blueprints.project_management.forms import (
 from utils import generate_csv, generate_pdf
 from decimal import Decimal
 from sqlalchemy import func
+from datetime import datetime
 
 project_bp = Blueprint('project_management', __name__, url_prefix='')
 
@@ -65,6 +66,49 @@ def dashboard():
     in_progress_tasks = Task.query.filter_by(status='in-progress').count()
     todo_tasks = Task.query.filter_by(status='to-do').count()
     
+    # Personalized employee insights
+    employee_insights = {}
+    if current_user.employee:
+        # Task completion rate for the current employee
+        user_total_tasks = Task.query.filter_by(user_id=current_user.id).count()
+        user_completed_tasks = Task.query.filter_by(user_id=current_user.id, status='completed').count()
+        completion_rate = (user_completed_tasks / user_total_tasks * 100) if user_total_tasks > 0 else 0
+        
+        # Upcoming leave requests
+        upcoming_leaves = Leave.query.filter_by(
+            employee_id=current_user.employee.id, 
+            status='approved'
+        ).filter(Leave.start_date >= datetime.now().date()).order_by(Leave.start_date).limit(3).all()
+        
+        # Recent payrolls
+        recent_payrolls = Payroll.query.filter_by(
+            employee_id=current_user.employee.id
+        ).order_by(Payroll.payment_date.desc()).limit(1).all()
+        
+        # Overdue tasks
+        overdue_tasks = Task.query.filter_by(
+            user_id=current_user.id
+        ).filter(
+            Task.due_date < datetime.now().date(),
+            Task.status != 'completed'
+        ).order_by(Task.due_date).all()
+        
+        # Days since hiring
+        if current_user.employee.hire_date:
+            days_employed = (datetime.now().date() - current_user.employee.hire_date).days
+        else:
+            days_employed = 0
+            
+        employee_insights = {
+            'completion_rate': round(completion_rate, 1),
+            'upcoming_leaves': upcoming_leaves,
+            'recent_payrolls': recent_payrolls,
+            'overdue_tasks': overdue_tasks,
+            'days_employed': days_employed,
+            'user_total_tasks': user_total_tasks,
+            'user_completed_tasks': user_completed_tasks
+        }
+    
     return render_template('project_management/dashboard.html',
                           projects=projects,
                           user_tasks=user_tasks,
@@ -75,7 +119,8 @@ def dashboard():
                           total_tasks=total_tasks,
                           completed_tasks=completed_tasks,
                           in_progress_tasks=in_progress_tasks,
-                          todo_tasks=todo_tasks)
+                          todo_tasks=todo_tasks,
+                          employee_insights=employee_insights)
 
 @project_bp.route('/projects')
 @login_required

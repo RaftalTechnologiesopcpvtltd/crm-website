@@ -83,7 +83,7 @@
                         {% endif %}
                     </div>
                     
-                    {% if admin_view and current_user.is_admin and hasattr(form, 'is_admin') %}
+                    {% if admin_view and current_user.is_admin and form.is_admin is defined %}
                     <div class="form-check mb-3">
                         {{ form.is_admin(class="form-check-input", id="is_admin") }}
                         <label class="form-check-label" for="is_admin">
