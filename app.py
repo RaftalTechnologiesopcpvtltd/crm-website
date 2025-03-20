@@ -51,6 +51,7 @@ def create_app():
         
         # Make sure the models are imported and tables created
         import models
+        import models_accounting
         
         db.create_all()
         
