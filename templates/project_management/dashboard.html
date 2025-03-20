@@ -71,7 +71,7 @@
                                 <div class="insight-detail">Since {{ current_user.employee.hire_date.strftime('%b %d, %Y') }}</div>
                                 <div class="progress mt-2">
                                     <div class="progress-bar bg-primary progress-bar-striped" role="progressbar" 
-                                        style="width: {{ (employee_insights.days_employed / 365 * 100)|round|min(100) }}%;" 
+                                        style="width: {{ min((employee_insights.days_employed / 365 * 100)|round, 100) }}%;" 
                                         aria-valuenow="{{ employee_insights.days_employed }}" 
                                         aria-valuemin="0" 
                                         aria-valuemax="365">
