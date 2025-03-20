@@ -85,22 +85,83 @@ def check_and_update_milestone_status(project_id):
 @project_bp.route('/dashboard')
 @login_required
 def dashboard():
-    projects = Project.query.order_by(Project.start_date.desc()).limit(5).all()
+    # Filter projects based on user department
+    if current_user.is_admin or current_user.department == 'accounting':
+        projects = Project.query.order_by(Project.start_date.desc()).limit(5).all()
+    else:
+        # Get projects where the user has assigned tasks
+        assigned_project_ids = db.session.query(Task.project_id).filter_by(user_id=current_user.id).distinct().all()
+        assigned_project_ids = [p[0] for p in assigned_project_ids]  # Convert to simple list
+        projects = Project.query.filter(Project.id.in_(assigned_project_ids)).order_by(Project.start_date.desc()).limit(5).all()
     
     # Get tasks assigned to current user
     user_tasks = Task.query.filter_by(user_id=current_user.id).order_by(Task.due_date.asc()).limit(5).all()
     
-    # Get project statistics
-    total_projects = Project.query.count()
-    completed_projects = Project.query.filter_by(status='completed').count()
-    in_progress_projects = Project.query.filter_by(status='in-progress').count()
-    planning_projects = Project.query.filter_by(status='planning').count()
+    # Department-specific data
+    department_data = {}
+    user_department = current_user.department
     
-    # Get task statistics
-    total_tasks = Task.query.count()
-    completed_tasks = Task.query.filter_by(status='completed').count()
-    in_progress_tasks = Task.query.filter_by(status='in-progress').count()
-    todo_tasks = Task.query.filter_by(status='to-do').count()
+    # Get project statistics - filtered for non-admin and non-accounting users
+    if current_user.is_admin or current_user.department == 'accounting':
+        total_projects = Project.query.count()
+        completed_projects = Project.query.filter_by(status='completed').count()
+        in_progress_projects = Project.query.filter_by(status='in-progress').count()
+        planning_projects = Project.query.filter_by(status='planning').count()
+        
+        # Get task statistics
+        total_tasks = Task.query.count()
+        completed_tasks = Task.query.filter_by(status='completed').count()
+        in_progress_tasks = Task.query.filter_by(status='in-progress').count()
+        todo_tasks = Task.query.filter_by(status='to-do').count()
+    else:
+        # For regular users, only count projects they're assigned to
+        assigned_project_ids = db.session.query(Task.project_id).filter_by(user_id=current_user.id).distinct().all()
+        assigned_project_ids = [p[0] for p in assigned_project_ids]
+        
+        if assigned_project_ids:
+            total_projects = Project.query.filter(Project.id.in_(assigned_project_ids)).count()
+            completed_projects = Project.query.filter(Project.id.in_(assigned_project_ids), Project.status=='completed').count()
+            in_progress_projects = Project.query.filter(Project.id.in_(assigned_project_ids), Project.status=='in-progress').count()
+            planning_projects = Project.query.filter(Project.id.in_(assigned_project_ids), Project.status=='planning').count()
+        else:
+            total_projects = completed_projects = in_progress_projects = planning_projects = 0
+        
+        # Only count tasks assigned to the user
+        total_tasks = Task.query.filter_by(user_id=current_user.id).count()
+        completed_tasks = Task.query.filter_by(user_id=current_user.id, status='completed').count()
+        in_progress_tasks = Task.query.filter_by(user_id=current_user.id, status='in-progress').count()
+        todo_tasks = Task.query.filter_by(user_id=current_user.id, status='to-do').count()
+    
+    # HR Department specific data
+    if user_department == 'hr' or current_user.is_admin:
+        department_data['hr'] = {
+            'total_employees': Employee.query.count(),
+            'total_leaves': Leave.query.count(),
+            'pending_leaves': Leave.query.filter_by(status='pending').count(),
+            'recent_attendances': Attendance.query.order_by(Attendance.date.desc()).limit(5).all(),
+            'attendance_today': Attendance.query.filter_by(date=datetime.now().date()).count(),
+            'payrolls_pending': Payroll.query.filter_by(status='pending').count()
+        }
+    
+    # Accounting Department specific data
+    if user_department == 'accounting' or current_user.is_admin:
+        department_data['accounting'] = {
+            'total_sales': Sales.query.count(),
+            'pending_payments': ProjectPayment.query.filter(
+                ProjectPayment.status.in_(['pending', 'in-review'])
+            ).count(),
+            'total_revenue': db.session.query(func.sum(Sales.received_amount)).scalar() or 0,
+            'outstanding_amount': db.session.query(func.sum(Sales.difference)).scalar() or 0
+        }
+    
+    # Developer Department specific data
+    if user_department == 'developer' or current_user.is_admin:
+        department_data['developer'] = {
+            'assigned_tasks': Task.query.filter_by(user_id=current_user.id).count(),
+            'in_review_tasks': Task.query.filter_by(user_id=current_user.id, status='in-review').count(),
+            'urgent_tasks': Task.query.filter_by(user_id=current_user.id, priority='urgent').count(),
+            'productivity': completed_tasks / total_tasks * 100 if total_tasks > 0 else 0
+        }
     
     # Personalized employee insights
     employee_insights = {}
@@ -134,6 +195,17 @@ def dashboard():
             days_employed = (datetime.now().date() - current_user.employee.hire_date).days
         else:
             days_employed = 0
+        
+        # Recent attendance records
+        recent_attendance = Attendance.query.filter_by(
+            employee_id=current_user.employee.id
+        ).order_by(Attendance.date.desc()).limit(5).all()
+        
+        # Today's attendance
+        today_attendance = Attendance.query.filter_by(
+            employee_id=current_user.employee.id,
+            date=datetime.now().date()
+        ).first()
             
         employee_insights = {
             'completion_rate': round(completion_rate, 1),
@@ -142,7 +214,9 @@ def dashboard():
             'overdue_tasks': overdue_tasks,
             'days_employed': days_employed,
             'user_total_tasks': user_total_tasks,
-            'user_completed_tasks': user_completed_tasks
+            'user_completed_tasks': user_completed_tasks,
+            'recent_attendance': recent_attendance,
+            'today_attendance': today_attendance
         }
     
     return render_template('project_management/dashboard.html',
@@ -156,7 +230,8 @@ def dashboard():
                           completed_tasks=completed_tasks,
                           in_progress_tasks=in_progress_tasks,
                           todo_tasks=todo_tasks,
-                          employee_insights=employee_insights)
+                          employee_insights=employee_insights,
+                          department_data=department_data)
 
 @project_bp.route('/projects')
 @login_required
