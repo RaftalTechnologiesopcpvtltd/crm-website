@@ -1026,3 +1026,11 @@ def project_sales(project_id):
     payments = ProjectPayment.query.filter_by(project_id=project_id).all()
     
     return render_template('project_management/sales_detail.html', sale=sale, payments=payments, project=project, title='Project Sales')
+
+@project_bp.route('/api/projects/<int:project_id>/milestones', methods=['GET'])
+@login_required
+def api_project_milestones(project_id):
+    """API endpoint to get milestones for a project"""
+    milestones = ProjectMilestone.query.filter_by(project_id=project_id).all()
+    result = [{'id': m.id, 'name': m.name} for m in milestones]
+    return jsonify(result)
