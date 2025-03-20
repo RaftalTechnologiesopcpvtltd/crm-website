@@ -179,6 +179,36 @@
     </div>
     
     <div class="col-md-4">
+        {% if project.due_date %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Time Left to Deliver</h5>
+            </div>
+            <div class="card-body">
+                <div class="time-blocks d-flex justify-content-center align-items-center">
+                    <div class="time-block">
+                        <div class="time-value days">00</div>
+                        <div class="time-label">Days</div>
+                    </div>
+                    <div class="time-divider">:</div>
+                    <div class="time-block">
+                        <div class="time-value hours">00</div>
+                        <div class="time-label">Hours</div>
+                    </div>
+                    <div class="time-divider">:</div>
+                    <div class="time-block">
+                        <div class="time-value minutes">00</div>
+                        <div class="time-label">Minutes</div>
+                    </div>
+                    <div class="time-divider">:</div>
+                    <div class="time-block">
+                        <div class="time-value seconds">00</div>
+                        <div class="time-label">Seconds</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title mb-0">Task Summary</h5>
