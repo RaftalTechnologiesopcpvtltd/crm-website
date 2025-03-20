@@ -181,6 +181,70 @@
     </div>
 </div>
 
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Payment Information</h5>
+                <a href="{{ url_for('project_management.project_payments', project_id=project.id) }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-money-bill-wave me-1"></i> View All Payments
+                </a>
+            </div>
+            <div class="card-body">
+                {% if project.payments %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Original Amount</th>
+                                <th>Platform Fee</th>
+                                <th>Conversion Rate</th>
+                                <th>Amount Received</th>
+                                <th>Account</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in project.payments %}
+                            <tr>
+                                <td>{{ payment.payment_date | formatdate if payment.payment_date else 'Not set' }}</td>
+                                <td>
+                                    <span class="badge {{ 'bg-success' if payment.status == 'reconciled' else 'bg-info' if payment.status == 'transferred' else 'bg-warning text-dark' if payment.status == 'in-platform' else 'bg-secondary' }}">
+                                        {{ payment.status|replace('-', ' ')|capitalize }}
+                                    </span>
+                                </td>
+                                <td>{{ payment.currency_original }} {{ "%.2f"|format(payment.amount_original) }}</td>
+                                <td>{{ payment.currency_original }} {{ "%.2f"|format(payment.platform_fee) }}</td>
+                                <td>{{ "%.6f"|format(payment.conversion_rate) }}</td>
+                                <td>{{ payment.currency_received }} {{ "%.2f"|format(payment.amount_received) if payment.amount_received else 'N/A' }}</td>
+                                <td>{{ payment.account.name if payment.account else 'Not specified' }}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{{ url_for('project_management.edit_payment', id=payment.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <p class="mb-2 text-muted">No payment records added yet</p>
+                    <a href="{{ url_for('project_management.new_payment') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i> Add Payment Record
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-12">
         <div class="card">
