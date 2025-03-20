@@ -213,6 +213,7 @@ class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    milestone_id = db.Column(db.Integer, db.ForeignKey('project_milestone.id'), nullable=True)
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
     due_date = db.Column(db.Date)
@@ -220,6 +221,9 @@ class Task(db.Model):
     status = db.Column(db.String(20), default='to-do')  # to-do, in-progress, in-review, completed
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationship
+    milestone = db.relationship('ProjectMilestone', backref='tasks', lazy=True)
     
     def __repr__(self):
         return f'<Task {self.title}>'

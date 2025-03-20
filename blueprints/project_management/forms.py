@@ -47,6 +47,7 @@ class ProjectForm(FlaskForm):
 
 class TaskForm(FlaskForm):
     user_id = SelectField('Assign To', validators=[Optional()], coerce=int)
+    milestone_id = SelectField('Milestone', validators=[Optional()], coerce=int)
     title = StringField('Task Title', validators=[DataRequired(), Length(max=100)])
     description = TextAreaField('Description', validators=[Optional()])
     due_date = DateField('Due Date', validators=[Optional()])
