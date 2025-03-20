@@ -124,3 +124,32 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+document.addEventListener('DOMContentLoaded', function() {
+    // Mobile menu toggle
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.querySelector('.sidebar');
+    
+    if (sidebarToggle && sidebar) {
+        sidebarToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('show');
+        });
+
+        // Close sidebar when clicking outside
+        document.addEventListener('click', function(e) {
+            if (sidebar.classList.contains('show') && 
+                !sidebar.contains(e.target) && 
+                !sidebarToggle.contains(e.target)) {
+                sidebar.classList.remove('show');
+            }
+        });
+    }
+
+    // Add touch support for dropdowns
+    const dropdowns = document.querySelectorAll('.dropdown-toggle');
+    dropdowns.forEach(dropdown => {
+        dropdown.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            this.click();
+        });
+    });
+});

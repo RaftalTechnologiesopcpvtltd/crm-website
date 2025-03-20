@@ -6,7 +6,7 @@
 
 {% block content %}
 <div class="row">
-    <div class="col-lg-8 mx-auto">
+    <div class="col-lg-8 col-md-10 col-sm-12 mx-auto">
         <div class="card">
             <div class="card-body">
                 <form method="POST" action="{{ url_for('project_management.edit_project', id=project.id) if project else url_for('project_management.new_project') }}">

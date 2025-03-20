@@ -158,6 +158,79 @@
     flex-shrink: 0;
 }
 
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -100%;
+        height: 100vh;
+        z-index: 1000;
+        transition: all 0.3s ease;
+    }
+
+    .sidebar.show {
+        left: 0;
+    }
+
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .welcome-container {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .welcome-graphic {
+        margin: 1rem 0;
+    }
+
+    .insight-card {
+        margin-bottom: 1rem;
+    }
+
+    .table-responsive {
+        margin-bottom: 1rem;
+        border: 0;
+    }
+
+    .btn-toolbar {
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+
+    .form-label {
+        margin-top: 0.5rem;
+    }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) {
+    .btn {
+        padding: 0.75rem 1rem;
+        min-height: 44px;
+    }
+
+    .form-control, .form-select {
+        min-height: 44px;
+        padding: 0.75rem;
+    }
+
+    .nav-link {
+        padding: 1rem 0.75rem;
+    }
+}
+
+/* Dark mode optimizations */
+@media (prefers-color-scheme: dark) {
+    .insight-card {
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+}
+
+
 .insight-icon i {
     font-size: 1.5rem;
 }
