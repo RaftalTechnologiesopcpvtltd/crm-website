@@ -250,7 +250,7 @@ class Project(db.Model):
     # Relationships
     tasks = db.relationship('Task', backref='project', lazy=True, cascade='all, delete-orphan')
     milestones = db.relationship('ProjectMilestone', backref='project', lazy=True, cascade='all, delete-orphan')
-    payments = db.relationship('ProjectPayment', backref='project', lazy=True, cascade='all, delete-orphan')
+    payments = db.relationship('ProjectPayment', backref='project', lazy=True)
     sale = db.relationship('Sales', backref='project_sale', uselist=False, cascade='all, delete-orphan')
     
     @property
