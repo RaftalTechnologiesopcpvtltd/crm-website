@@ -72,6 +72,10 @@ def create_app():
             db.session.add(admin)
             db.session.commit()
             app.logger.info('Admin user created')
+            
+        # Initialize accounting data
+        from blueprints.accounting.routes import initialize_accounting
+        initialize_accounting()
     
     # Template filters
     @app.template_filter('formatdate')

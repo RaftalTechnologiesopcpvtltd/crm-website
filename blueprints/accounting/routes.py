@@ -469,3 +469,68 @@ def post_journal_entry(id):
     
     flash(f'Journal Entry {entry.entry_number} has been posted.', 'success')
     return redirect(url_for('accounting.journal_entries'))
+
+@accounting_bp.route('/general-ledger', methods=['GET'])
+@login_required
+def general_ledger():
+    """General Ledger - View all financial transactions"""
+    check_admin()
+    
+    # Get filter parameters
+    account_id = request.args.get('account_id', type=int)
+    from_date = request.args.get('from_date')
+    to_date = request.args.get('to_date')
+    entry_type = request.args.get('entry_type')
+    
+    # Convert string dates to date objects
+    if from_date:
+        from_date = datetime.strptime(from_date, '%Y-%m-%d').date()
+    if to_date:
+        to_date = datetime.strptime(to_date, '%Y-%m-%d').date()
+    
+    # Base query for journal entry lines
+    query = db.session.query(
+        JournalEntryLine, 
+        JournalEntry, 
+        ChartOfAccount
+    ).join(
+        JournalEntry, 
+        JournalEntryLine.journal_entry_id == JournalEntry.id
+    ).join(
+        ChartOfAccount, 
+        JournalEntryLine.account_id == ChartOfAccount.id
+    ).filter(
+        JournalEntry.status == 'POSTED'  # Only include posted entries
+    )
+    
+    # Apply filters
+    if account_id:
+        query = query.filter(JournalEntryLine.account_id == account_id)
+    
+    if from_date:
+        query = query.filter(JournalEntry.date >= from_date)
+    
+    if to_date:
+        query = query.filter(JournalEntry.date <= to_date)
+    
+    if entry_type:
+        query = query.filter(JournalEntry.entry_type == entry_type)
+    
+    # Order by date (newest first) and then by entry number
+    results = query.order_by(JournalEntry.date.desc(), JournalEntry.entry_number).all()
+    
+    # Get all accounts for the filter dropdown
+    accounts = ChartOfAccount.query.filter_by(is_active=True).order_by(ChartOfAccount.code).all()
+    
+    # Get entry types for the filter dropdown
+    entry_types = [('MANUAL', 'Manual'), ('SYSTEM', 'System'), ('RECURRING', 'Recurring')]
+    
+    return render_template('accounting/general_ledger.html', 
+                          results=results,
+                          accounts=accounts,
+                          entry_types=entry_types,
+                          selected_account_id=account_id,
+                          selected_from_date=from_date,
+                          selected_to_date=to_date,
+                          selected_entry_type=entry_type,
+                          title='General Ledger')

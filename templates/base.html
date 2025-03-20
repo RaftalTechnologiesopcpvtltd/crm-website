@@ -77,6 +77,12 @@
                                         </a>
                                     </li>
                                     <li class="nav-item">
+                                        <a class="nav-link {% if 'accounting.general_ledger' == request.endpoint %}active{% endif %}" href="{{ url_for('accounting.general_ledger') }}">
+                                            <i class="fas fa-book me-2"></i>
+                                            General Ledger
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
                                         <a class="nav-link {% if 'accounting.fiscal_years' == request.endpoint %}active{% endif %}" href="{{ url_for('accounting.fiscal_years') }}">
                                             <i class="fas fa-calendar me-2"></i>
                                             Fiscal Years
