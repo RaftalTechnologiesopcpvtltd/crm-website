@@ -1,9 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timedelta, date
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from app import db
-from models import Employee, Leave, Payroll, User
+from models import Employee, Leave, Payroll, User, Attendance
 from blueprints.hr.forms import EmployeeForm, LeaveForm, PayrollForm
+from blueprints.hr.attendance_forms import AttendanceForm, AttendanceBulkForm, AttendanceReportForm, PayrollCalculationForm
 from utils import generate_csv, generate_pdf, format_currency
 
 hr_bp = Blueprint('hr', __name__, url_prefix='/hr')
@@ -297,3 +298,246 @@ def payroll_slip(id):
         f'payslip_{payroll.payment_date}',
         payroll=payroll
     )
+
+# Attendance Routes
+@hr_bp.route('/attendance')
+def attendance():
+    """View attendance records"""
+    if current_user.is_admin or current_user.department == 'hr':
+        # Admins and HR can see all attendance records
+        query = Attendance.query
+        
+        # Filter by employee if specified
+        employee_id = request.args.get('employee_id', type=int)
+        if employee_id:
+            query = query.filter_by(employee_id=employee_id)
+        
+        # Filter by date range if specified
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        if start_date and end_date:
+            try:
+                start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+                end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+                query = query.filter(Attendance.date >= start_date, Attendance.date <= end_date)
+            except ValueError:
+                flash('Invalid date format. Use YYYY-MM-DD.', 'danger')
+        
+        attendance_records = query.order_by(Attendance.date.desc()).all()
+        employees = Employee.query.all()
+    else:
+        # Regular users can only see their own attendance
+        employee = Employee.query.filter_by(user_id=current_user.id).first()
+        if not employee:
+            flash('You are not registered as an employee.', 'warning')
+            return redirect(url_for('project_management.dashboard'))
+        
+        attendance_records = Attendance.query.filter_by(employee_id=employee.id).order_by(Attendance.date.desc()).all()
+        employees = [employee]
+    
+    return render_template('hr/attendance.html', attendance_records=attendance_records, employees=employees)
+
+@hr_bp.route('/attendance/new', methods=['GET', 'POST'])
+def new_attendance():
+    """Create a new attendance record"""
+    if not current_user.is_admin and not current_user.department == 'hr':
+        flash('Access denied. Admin or HR privileges required.', 'danger')
+        return redirect(url_for('hr.attendance'))
+    
+    form = AttendanceForm()
+    form.employee_id.choices = [(e.id, e.full_name) for e in Employee.query.all()]
+    
+    if form.validate_on_submit():
+        # Check if record already exists for this employee and date
+        existing = Attendance.query.filter_by(
+            employee_id=form.employee_id.data,
+            date=form.date.data
+        ).first()
+        
+        if existing:
+            flash(f'Attendance record already exists for this employee on {form.date.data}. Please edit the existing record.', 'warning')
+            return redirect(url_for('hr.attendance'))
+        
+        attendance = Attendance(
+            employee_id=form.employee_id.data,
+            date=form.date.data,
+            check_in_time=form.check_in_time.data,
+            check_out_time=form.check_out_time.data,
+            status=form.status.data,
+            remarks=form.remarks.data
+        )
+        
+        db.session.add(attendance)
+        db.session.commit()
+        
+        flash('Attendance record created successfully!', 'success')
+        return redirect(url_for('hr.attendance'))
+    
+    return render_template('hr/attendance_form.html', form=form, title='New Attendance Record')
+
+@hr_bp.route('/attendance/<int:id>/edit', methods=['GET', 'POST'])
+def edit_attendance(id):
+    """Edit an attendance record"""
+    if not current_user.is_admin and not current_user.department == 'hr':
+        flash('Access denied. Admin or HR privileges required.', 'danger')
+        return redirect(url_for('hr.attendance'))
+    
+    attendance = Attendance.query.get_or_404(id)
+    form = AttendanceForm(obj=attendance)
+    form.employee_id.choices = [(e.id, e.full_name) for e in Employee.query.all()]
+    
+    if form.validate_on_submit():
+        form.populate_obj(attendance)
+        db.session.commit()
+        
+        flash('Attendance record updated successfully!', 'success')
+        return redirect(url_for('hr.attendance'))
+    
+    return render_template('hr/attendance_form.html', form=form, attendance=attendance, title='Edit Attendance Record')
+
+@hr_bp.route('/attendance/<int:id>/delete', methods=['POST'])
+def delete_attendance(id):
+    """Delete an attendance record"""
+    if not current_user.is_admin and not current_user.department == 'hr':
+        flash('Access denied. Admin or HR privileges required.', 'danger')
+        return redirect(url_for('hr.attendance'))
+    
+    attendance = Attendance.query.get_or_404(id)
+    db.session.delete(attendance)
+    db.session.commit()
+    
+    flash('Attendance record deleted successfully!', 'success')
+    return redirect(url_for('hr.attendance'))
+
+@hr_bp.route('/attendance/bulk', methods=['GET', 'POST'])
+def bulk_attendance():
+    """Bulk attendance creation/update"""
+    if not current_user.is_admin and not current_user.department == 'hr':
+        flash('Access denied. Admin or HR privileges required.', 'danger')
+        return redirect(url_for('hr.attendance'))
+    
+    form = AttendanceBulkForm()
+    
+    if form.validate_on_submit():
+        date = form.date.data
+        employees = Employee.query.all()
+        
+        for employee in employees:
+            # Check if attendance record already exists
+            existing = Attendance.query.filter_by(employee_id=employee.id, date=date).first()
+            
+            if existing:
+                # Update existing record if mark all present is checked
+                if form.mark_all_present.data:
+                    existing.status = 'present'
+                    db.session.add(existing)
+            else:
+                # Create new record
+                attendance = Attendance(
+                    employee_id=employee.id,
+                    date=date,
+                    status='present' if form.mark_all_present.data else 'absent'
+                )
+                db.session.add(attendance)
+        
+        db.session.commit()
+        flash('Bulk attendance records updated successfully!', 'success')
+        return redirect(url_for('hr.attendance'))
+    
+    return render_template('hr/attendance_bulk_form.html', form=form, title='Bulk Attendance Update')
+
+@hr_bp.route('/attendance/report', methods=['GET', 'POST'])
+def attendance_report():
+    """Generate attendance report"""
+    if not current_user.is_admin and not current_user.department == 'hr':
+        flash('Access denied. Admin or HR privileges required.', 'danger')
+        return redirect(url_for('hr.attendance'))
+    
+    form = AttendanceReportForm()
+    form.employee_id.choices = [(0, 'All Employees')] + [(e.id, e.full_name) for e in Employee.query.all()]
+    
+    if form.validate_on_submit():
+        start_date = form.start_date.data
+        end_date = form.end_date.data
+        
+        if start_date > end_date:
+            flash('Start date cannot be after end date.', 'danger')
+            return render_template('hr/attendance_report_form.html', form=form, title='Attendance Report')
+        
+        # Generate report
+        if form.employee_id.data == 0:
+            # Report for all employees
+            employees = Employee.query.all()
+            attendance_data = []
+            
+            for employee in employees:
+                attendance_summary = employee.get_attendance_summary(start_date, end_date)
+                attendance_data.append({
+                    'employee': employee,
+                    'summary': attendance_summary
+                })
+            
+            return render_template(
+                'hr/attendance_report.html',
+                attendance_data=attendance_data,
+                start_date=start_date,
+                end_date=end_date,
+                title='Attendance Report - All Employees'
+            )
+        else:
+            # Report for specific employee
+            employee = Employee.query.get_or_404(form.employee_id.data)
+            attendance_records = employee.get_attendance_for_period(start_date, end_date)
+            attendance_summary = employee.get_attendance_summary(start_date, end_date)
+            
+            return render_template(
+                'hr/attendance_report_employee.html',
+                employee=employee,
+                attendance_records=attendance_records,
+                attendance_summary=attendance_summary,
+                start_date=start_date,
+                end_date=end_date,
+                title=f'Attendance Report - {employee.full_name}'
+            )
+    
+    return render_template('hr/attendance_report_form.html', form=form, title='Attendance Report')
+
+@hr_bp.route('/payroll/calculate', methods=['GET', 'POST'])
+def calculate_payroll():
+    """Calculate payroll based on attendance"""
+    if not current_user.is_admin and not current_user.department == 'hr':
+        flash('Access denied. Admin or HR privileges required.', 'danger')
+        return redirect(url_for('hr.payroll'))
+    
+    form = PayrollCalculationForm()
+    form.employee_id.choices = [(e.id, e.full_name) for e in Employee.query.all()]
+    
+    if form.validate_on_submit():
+        employee = Employee.query.get(form.employee_id.data)
+        
+        # Create new payroll record
+        payroll = Payroll(
+            employee_id=form.employee_id.data,
+            pay_period_start=form.pay_period_start.data,
+            pay_period_end=form.pay_period_end.data,
+            base_salary=employee.salary,
+            attendance_based=form.attendance_based.data,
+            bonus=form.bonus.data or 0,
+            deductions=form.deductions.data or 0,
+            payment_date=form.payment_date.data,
+            status='pending'
+        )
+        
+        # Calculate net pay based on attendance if selected
+        if form.attendance_based.data:
+            payroll.calculate_from_attendance()
+        else:
+            payroll.net_pay = float(employee.salary) + float(form.bonus.data or 0) - float(form.deductions.data or 0)
+        
+        db.session.add(payroll)
+        db.session.commit()
+        
+        flash('Payroll record calculated and created successfully!', 'success')
+        return redirect(url_for('hr.payroll_detail', id=payroll.id))
+    
+    return render_template('hr/payroll_calculation_form.html', form=form, title='Calculate Payroll')

@@ -13,6 +13,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
+    department = db.Column(db.String(64), default='general')  # accounting, hr, developer, general
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -25,6 +26,14 @@ class User(UserMixin, db.Model):
     
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+    
+    def has_access(self, department_list):
+        """Check if user has access to the specified departments"""
+        if self.is_admin:
+            return True
+        if isinstance(department_list, str):
+            return self.department == department_list
+        return self.department in department_list
     
     def __repr__(self):
         return f'<User {self.username}>'
@@ -46,10 +55,81 @@ class Employee(db.Model):
     # Relationships
     leaves = db.relationship('Leave', backref='employee', lazy=True)
     payrolls = db.relationship('Payroll', backref='employee', lazy=True)
+    attendances = db.relationship('Attendance', backref='employee', lazy=True)
     
     @property
     def full_name(self):
         return f"{self.first_name} {self.last_name}"
+    
+    def get_attendance_for_period(self, start_date, end_date):
+        """Get attendance records for a specific period"""
+        from app import db
+        return Attendance.query.filter(
+            Attendance.employee_id == self.id,
+            Attendance.date >= start_date,
+            Attendance.date <= end_date
+        ).order_by(Attendance.date.asc()).all()
+    
+    def get_attendance_summary(self, start_date, end_date):
+        """Get attendance summary for a specific period"""
+        attendance_records = self.get_attendance_for_period(start_date, end_date)
+        
+        # Initialize counters
+        total_days = (end_date - start_date).days + 1
+        present_days = 0
+        absent_days = 0
+        late_days = 0
+        
+        # Count attendance statuses
+        for record in attendance_records:
+            if record.status == 'present':
+                present_days += 1
+            elif record.status == 'absent':
+                absent_days += 1
+            elif record.status == 'late':
+                late_days += 1
+        
+        return {
+            'total_days': total_days,
+            'present_days': present_days,
+            'absent_days': absent_days,
+            'late_days': late_days,
+            'attendance_percentage': (present_days / total_days * 100) if total_days > 0 else 0
+        }
+    
+    def calculate_salary_based_on_attendance(self, start_date, end_date):
+        """Calculate salary based on attendance for a specific period"""
+        # Get attendance summary
+        attendance_summary = self.get_attendance_summary(start_date, end_date)
+        
+        # Calculate working days in the period
+        from datetime import timedelta
+        working_days = 0
+        current_date = start_date
+        while current_date <= end_date:
+            # Skip weekends (0 = Monday, 6 = Sunday)
+            if current_date.weekday() < 5:  # Weekdays only
+                working_days += 1
+            current_date += timedelta(days=1)
+        
+        # Calculate daily salary
+        daily_salary = self.salary / working_days if working_days > 0 else 0
+        
+        # Calculate salary based on attendance
+        # Full salary for present days, no salary for absent days, reduced for late
+        present_salary = daily_salary * attendance_summary['present_days']
+        late_salary = daily_salary * 0.5 * attendance_summary['late_days']  # Half pay for late days
+        
+        # Total salary
+        total_salary = present_salary + late_salary
+        
+        return {
+            'daily_salary': daily_salary,
+            'present_salary': present_salary,
+            'late_salary': late_salary,
+            'total_salary': total_salary,
+            'attendance_summary': attendance_summary
+        }
     
     def __repr__(self):
         return f'<Employee {self.full_name}>'
@@ -74,6 +154,11 @@ class Payroll(db.Model):
     pay_period_start = db.Column(db.Date, nullable=False)
     pay_period_end = db.Column(db.Date, nullable=False)
     base_salary = db.Column(db.Numeric(10, 2), nullable=False)
+    attendance_based = db.Column(db.Boolean, default=False)  # Whether salary is calculated based on attendance
+    attendance_salary = db.Column(db.Numeric(10, 2), default=0)  # Salary calculated based on attendance
+    present_days = db.Column(db.Integer, default=0)  # Number of days present
+    absent_days = db.Column(db.Integer, default=0)  # Number of days absent
+    late_days = db.Column(db.Integer, default=0)  # Number of days late
     bonus = db.Column(db.Numeric(10, 2), default=0)
     deductions = db.Column(db.Numeric(10, 2), default=0)
     net_pay = db.Column(db.Numeric(10, 2), nullable=False)
@@ -81,6 +166,34 @@ class Payroll(db.Model):
     status = db.Column(db.String(20), default='pending')  # pending, processed, paid
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def calculate_from_attendance(self):
+        """Calculate salary based on attendance"""
+        if not self.attendance_based:
+            return
+            
+        attendance_data = self.employee.calculate_salary_based_on_attendance(
+            self.pay_period_start, self.pay_period_end
+        )
+        
+        # Update attendance-related fields
+        self.attendance_salary = attendance_data['total_salary']
+        self.present_days = attendance_data['attendance_summary']['present_days']
+        self.absent_days = attendance_data['attendance_summary']['absent_days']
+        self.late_days = attendance_data['attendance_summary']['late_days']
+        
+        # Calculate net pay
+        self.net_pay = self.attendance_salary + self.bonus - self.deductions
+        
+        return self.net_pay
+        
+    def calculate_net_pay(self):
+        """Calculate net pay"""
+        if self.attendance_based:
+            self.calculate_from_attendance()
+        else:
+            self.net_pay = self.base_salary + self.bonus - self.deductions
+        return self.net_pay
     
     def __repr__(self):
         return f'<Payroll {self.payment_date} - {self.status}>'
@@ -262,3 +375,30 @@ class Task(db.Model):
     
     def __repr__(self):
         return f'<Task {self.title}>'
+
+class Attendance(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
+    date = db.Column(db.Date, nullable=False)
+    check_in_time = db.Column(db.Time, nullable=True)
+    check_out_time = db.Column(db.Time, nullable=True)
+    status = db.Column(db.String(20), default='present')  # present, absent, late, half-day
+    remarks = db.Column(db.String(255))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Define unique constraint for employee and date
+    __table_args__ = (db.UniqueConstraint('employee_id', 'date', name='unique_employee_attendance_date'),)
+    
+    @property
+    def total_hours(self):
+        """Calculate total hours worked"""
+        if self.check_in_time and self.check_out_time:
+            checkin = datetime.combine(self.date, self.check_in_time)
+            checkout = datetime.combine(self.date, self.check_out_time)
+            duration = checkout - checkin
+            return round(duration.total_seconds() / 3600, 2)  # Convert to hours
+        return 0
+    
+    def __repr__(self):
+        return f'<Attendance {self.employee_id} - {self.date} - {self.status}>'
