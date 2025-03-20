@@ -10,8 +10,8 @@
                     <i class="fas fa-file-export"></i> Export
                 </button>
                 <ul class="dropdown-menu" aria-labelledby="exportDropdown">
-                    <li><a class="dropdown-item" href="{{ url_for('accounting.cash_flow_statement', from_date=from_date, to_date=to_date, export='pdf') }}"><i class="fas fa-file-pdf"></i> PDF</a></li>
-                    <li><a class="dropdown-item" href="{{ url_for('accounting.cash_flow_statement', from_date=from_date, to_date=to_date, export='csv') }}"><i class="fas fa-file-csv"></i> CSV</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('accounting.cash_flow_statement', from_date=from_date|string, to_date=to_date|string, export='pdf') }}"><i class="fas fa-file-pdf"></i> PDF</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('accounting.cash_flow_statement', from_date=from_date|string, to_date=to_date|string, export='csv') }}"><i class="fas fa-file-csv"></i> CSV</a></li>
                 </ul>
             </div>
         </div>
