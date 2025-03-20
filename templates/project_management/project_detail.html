@@ -204,21 +204,37 @@
                 {% if project.milestones %}
                 <ul class="list-group list-group-flush">
                     {% for milestone in project.milestones %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="mb-1">{{ milestone.name }}</h6>
-                            <p class="text-muted small mb-1">Due: {{ milestone.due_date | formatdate }}</p>
-                            <span class="badge {{ 'bg-success' if milestone.status == 'paid' else 'bg-warning text-dark' if milestone.status == 'completed' else 'bg-secondary' }}">
-                                {{ milestone.status|capitalize }}
-                            </span>
-                        </div>
-                        <div class="text-end">
-                            <div class="text-muted mb-2">${{ "%.2f"|format(milestone.amount) }}</div>
-                            <div class="btn-group btn-group-sm">
-                                <a href="{{ url_for('project_management.edit_milestone', id=milestone.id) }}" class="btn btn-outline-primary">
-                                    <i class="fas fa-edit"></i>
-                                </a>
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <h6 class="mb-1">{{ milestone.name }}</h6>
+                                <p class="text-muted small mb-1">Due: {{ milestone.due_date | formatdate }}</p>
+                                <span class="badge {{ 'bg-success' if milestone.status == 'paid' else 'bg-warning text-dark' if milestone.status == 'completed' else 'bg-secondary' }}">
+                                    {{ milestone.status|capitalize }}
+                                </span>
                             </div>
+                            <div class="text-end">
+                                <div class="text-muted mb-2">${{ "%.2f"|format(milestone.amount) }}</div>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('project_management.edit_milestone', id=milestone.id) }}" class="btn btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Progress Bar -->
+                        <div class="progress mt-2" style="height: 10px;" title="Task Completion: {{ milestone.progress }}%">
+                            {% set progress_color = 'bg-success' if milestone.progress == 100 else 'bg-info' if milestone.progress > 50 else 'bg-warning' %}
+                            <div class="progress-bar {{ progress_color }}" role="progressbar" 
+                                 style="width: {{ milestone.progress }}%;" 
+                                 aria-valuenow="{{ milestone.progress }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                            </div>
+                        </div>
+                        <div class="text-end mt-1">
+                            <small class="text-muted">{{ milestone.progress }}% complete</small>
                         </div>
                     </li>
                     {% endfor %}

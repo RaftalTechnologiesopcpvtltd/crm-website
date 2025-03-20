@@ -160,6 +160,28 @@ class ProjectMilestone(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
+    @property
+    def progress(self):
+        """Calculate milestone progress based on completed tasks in the project"""
+        from sqlalchemy import func
+        from app import db
+        from models import Task  # Local import to avoid circular imports
+        
+        # Get total number of tasks for this project
+        total_tasks = Task.query.filter_by(project_id=self.project_id).count()
+        
+        if total_tasks == 0:
+            return 0
+            
+        # Get number of completed tasks
+        completed_tasks = Task.query.filter_by(
+            project_id=self.project_id, 
+            status='completed'
+        ).count()
+        
+        # Calculate percentage
+        return int((completed_tasks / total_tasks) * 100)
+    
     def __repr__(self):
         return f'<ProjectMilestone {self.name}>'
 
