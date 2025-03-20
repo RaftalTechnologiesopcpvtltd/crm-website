@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, Response
 from flask_login import login_required, current_user
 from app import db
 from models import Project, Task, User, Employee, ClientUser, ProjectMilestone, ProjectPayment, Account, Sales, Leave, Payroll, Attendance
@@ -10,6 +10,8 @@ from utils import generate_csv, generate_pdf
 from decimal import Decimal
 from sqlalchemy import func
 from datetime import datetime, date
+import json
+import time
 
 project_bp = Blueprint('project_management', __name__, url_prefix='')
 
