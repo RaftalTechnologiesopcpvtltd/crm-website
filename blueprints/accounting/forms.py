@@ -1,20 +1,24 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SelectField, TextAreaField, DecimalField, BooleanField
-from wtforms import DateField, HiddenField, SubmitField
-from wtforms.validators import DataRequired, Length, Optional, ValidationError
+from wtforms import StringField, TextAreaField, SelectField, BooleanField, DecimalField, DateField, HiddenField, SubmitField
+from wtforms.validators import DataRequired, Optional, Length, NumberRange, ValidationError
 from models_accounting import AccountType, DebitCredit
+from decimal import Decimal
 
 class ChartOfAccountForm(FlaskForm):
     """Form for Chart of Accounts"""
     code = StringField('Account Code', validators=[DataRequired(), Length(max=20)])
     name = StringField('Account Name', validators=[DataRequired(), Length(max=100)])
-    account_type = SelectField('Account Type', choices=AccountType.choices(), validators=[DataRequired()])
+    account_type = SelectField('Account Type', choices=[], validators=[DataRequired()])
     parent_id = SelectField('Parent Account', coerce=int, validators=[Optional()])
     description = TextAreaField('Description', validators=[Optional()])
-    is_active = BooleanField('Active')
-    normal_balance = SelectField('Normal Balance', choices=DebitCredit.choices(), validators=[DataRequired()])
+    is_active = BooleanField('Active', default=True)
+    normal_balance = SelectField('Normal Balance', choices=[], validators=[DataRequired()])
     submit = SubmitField('Save Account')
-
+    
+    def __init__(self, *args, **kwargs):
+        super(ChartOfAccountForm, self).__init__(*args, **kwargs)
+        self.account_type.choices = AccountType.choices()
+        self.normal_balance.choices = DebitCredit.choices()
 
 class FiscalYearForm(FlaskForm):
     """Form for Fiscal Year"""
@@ -24,7 +28,6 @@ class FiscalYearForm(FlaskForm):
     is_closed = BooleanField('Closed')
     submit = SubmitField('Save Fiscal Year')
 
-
 class AccountingPeriodForm(FlaskForm):
     """Form for Accounting Period"""
     fiscal_year_id = SelectField('Fiscal Year', coerce=int, validators=[DataRequired()])
@@ -33,7 +36,6 @@ class AccountingPeriodForm(FlaskForm):
     end_date = DateField('End Date', validators=[DataRequired()])
     is_closed = BooleanField('Closed')
     submit = SubmitField('Save Period')
-
 
 class JournalEntryForm(FlaskForm):
     """Form for Journal Entry"""
@@ -54,30 +56,28 @@ class JournalEntryForm(FlaskForm):
                            default='MANUAL')
     submit = SubmitField('Save Journal Entry')
 
-
 class JournalEntryLineForm(FlaskForm):
     """Form for Journal Entry Line items"""
     journal_entry_id = HiddenField('Journal Entry ID')
     account_id = SelectField('Account', coerce=int, validators=[DataRequired()])
     description = TextAreaField('Description', validators=[Optional()])
-    debit_amount = DecimalField('Debit', places=2, validators=[Optional()])
-    credit_amount = DecimalField('Credit', places=2, validators=[Optional()])
+    debit_amount = DecimalField('Debit', places=2, validators=[Optional()], default=Decimal('0.00'))
+    credit_amount = DecimalField('Credit', places=2, validators=[Optional()], default=Decimal('0.00'))
     submit = SubmitField('Add Line')
     
     def validate(self):
-        if not super().validate():
-            return False
-        
-        if self.debit_amount.data > 0 and self.credit_amount.data > 0:
-            self.debit_amount.errors.append('An entry cannot have both debit and credit amounts')
+        if not super(JournalEntryLineForm, self).validate():
             return False
         
         if self.debit_amount.data == 0 and self.credit_amount.data == 0:
             self.debit_amount.errors.append('Either debit or credit amount must be greater than zero')
             return False
         
+        if self.debit_amount.data > 0 and self.credit_amount.data > 0:
+            self.credit_amount.errors.append('An entry cannot have both debit and credit amounts')
+            return False
+        
         return True
-
 
 class CurrencyForm(FlaskForm):
     """Form for Currency"""
@@ -85,9 +85,8 @@ class CurrencyForm(FlaskForm):
     name = StringField('Currency Name', validators=[DataRequired(), Length(max=50)])
     symbol = StringField('Symbol', validators=[DataRequired(), Length(max=5)])
     is_base = BooleanField('Base Currency')
-    is_active = BooleanField('Active')
+    is_active = BooleanField('Active', default=True)
     submit = SubmitField('Save Currency')
-
 
 class ExchangeRateForm(FlaskForm):
     """Form for Exchange Rate"""
@@ -99,8 +98,7 @@ class ExchangeRateForm(FlaskForm):
     
     def validate_to_currency_id(self, field):
         if field.data == self.from_currency_id.data:
-            raise ValidationError('From and To currencies must be different')
-
+            raise ValidationError('To currency must be different from From currency')
 
 class TaxForm(FlaskForm):
     """Form for Tax"""
@@ -114,10 +112,9 @@ class TaxForm(FlaskForm):
                                  ('OTHER', 'Other')],
                          default='VAT')
     description = TextAreaField('Description', validators=[Optional()])
-    is_active = BooleanField('Active')
+    is_active = BooleanField('Active', default=True)
     account_id = SelectField('Tax Account', coerce=int, validators=[DataRequired()])
     submit = SubmitField('Save Tax')
-
 
 class VendorForm(FlaskForm):
     """Form for Vendor"""
@@ -135,9 +132,8 @@ class VendorForm(FlaskForm):
                                       ('OTHER', 'Other')],
                               default='NET30')
     account_id = SelectField('AP Account', coerce=int, validators=[DataRequired()])
-    is_active = BooleanField('Active')
+    is_active = BooleanField('Active', default=True)
     submit = SubmitField('Save Vendor')
-
 
 class VendorInvoiceForm(FlaskForm):
     """Form for Vendor Invoice"""
@@ -146,7 +142,7 @@ class VendorInvoiceForm(FlaskForm):
     date = DateField('Invoice Date', validators=[DataRequired()])
     due_date = DateField('Due Date', validators=[DataRequired()])
     total_amount = DecimalField('Total Amount', places=2, validators=[DataRequired()])
-    tax_amount = DecimalField('Tax Amount', places=2, default=0)
+    tax_amount = DecimalField('Tax Amount', places=2, default=Decimal('0.00'))
     status = SelectField('Status', 
                        choices=[('PENDING', 'Pending'), 
                                ('APPROVED', 'Approved'),
@@ -154,7 +150,6 @@ class VendorInvoiceForm(FlaskForm):
                                ('VOIDED', 'Voided')],
                        default='PENDING')
     submit = SubmitField('Save Invoice')
-
 
 class VendorPaymentForm(FlaskForm):
     """Form for Vendor Payment"""
@@ -172,7 +167,6 @@ class VendorPaymentForm(FlaskForm):
     reference = StringField('Reference', validators=[Optional(), Length(max=100)])
     submit = SubmitField('Save Payment')
 
-
 class CustomerForm(FlaskForm):
     """Form for Customer"""
     name = StringField('Customer Name', validators=[DataRequired(), Length(max=100)])
@@ -189,10 +183,9 @@ class CustomerForm(FlaskForm):
                                       ('OTHER', 'Other')],
                               default='NET30')
     account_id = SelectField('AR Account', coerce=int, validators=[DataRequired()])
-    is_active = BooleanField('Active')
+    is_active = BooleanField('Active', default=True)
     client_user_id = SelectField('Existing Client', coerce=int, validators=[Optional()])
     submit = SubmitField('Save Customer')
-
 
 class CustomerInvoiceForm(FlaskForm):
     """Form for Customer Invoice"""
@@ -201,7 +194,7 @@ class CustomerInvoiceForm(FlaskForm):
     date = DateField('Invoice Date', validators=[DataRequired()])
     due_date = DateField('Due Date', validators=[DataRequired()])
     total_amount = DecimalField('Total Amount', places=2, validators=[DataRequired()])
-    tax_amount = DecimalField('Tax Amount', places=2, default=0)
+    tax_amount = DecimalField('Tax Amount', places=2, default=Decimal('0.00'))
     status = SelectField('Status', 
                        choices=[('PENDING', 'Pending'), 
                                ('SENT', 'Sent'),
@@ -210,7 +203,6 @@ class CustomerInvoiceForm(FlaskForm):
                        default='PENDING')
     project_id = SelectField('Project', coerce=int, validators=[Optional()])
     submit = SubmitField('Save Invoice')
-
 
 class CustomerPaymentForm(FlaskForm):
     """Form for Customer Payment"""
@@ -229,17 +221,15 @@ class CustomerPaymentForm(FlaskForm):
     project_payment_id = SelectField('Project Payment', coerce=int, validators=[Optional()])
     submit = SubmitField('Save Payment')
 
-
 class BankAccountForm(FlaskForm):
     """Form for Bank Account"""
     name = StringField('Account Name', validators=[DataRequired(), Length(max=100)])
     account_number = StringField('Account Number', validators=[DataRequired(), Length(max=50)])
     bank_name = StringField('Bank Name', validators=[DataRequired(), Length(max=100)])
     account_id = SelectField('GL Account', coerce=int, validators=[DataRequired()])
-    is_active = BooleanField('Active')
+    is_active = BooleanField('Active', default=True)
     currency_id = SelectField('Currency', coerce=int, validators=[DataRequired()])
     submit = SubmitField('Save Bank Account')
-
 
 class BankReconciliationForm(FlaskForm):
     """Form for Bank Reconciliation"""
@@ -249,7 +239,6 @@ class BankReconciliationForm(FlaskForm):
     is_reconciled = BooleanField('Reconciled')
     reconciled_date = DateField('Reconciled Date', validators=[Optional()])
     submit = SubmitField('Save Reconciliation')
-
 
 class BankTransactionForm(FlaskForm):
     """Form for Bank Transaction"""
