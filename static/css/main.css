@@ -68,47 +68,101 @@
 .card-gradient-blue {
     background: linear-gradient(135deg, #0061ff, #60efff);
     color: white;
+    background-size: 200% 200%;
+    animation: gradient-shift 15s ease infinite;
 }
 
 .card-gradient-purple {
     background: linear-gradient(135deg, #6b17e6, #5e02ff, #bb00ff);
     color: white;
+    background-size: 200% 200%;
+    animation: gradient-shift 15s ease infinite;
 }
 
 .card-gradient-green {
     background: linear-gradient(135deg, #11998e, #38ef7d);
     color: white;
+    background-size: 200% 200%;
+    animation: gradient-shift 15s ease infinite;
 }
 
 .card-gradient-orange {
     background: linear-gradient(135deg, #f46b45, #eea849);
     color: white;
+    background-size: 200% 200%;
+    animation: gradient-shift 15s ease infinite;
 }
 
 .card-gradient-red {
     background: linear-gradient(135deg, #ff416c, #ff4b2b);
     color: white;
+    background-size: 200% 200%;
+    animation: gradient-shift 15s ease infinite;
 }
 
 .card-gradient-teal {
     background: linear-gradient(135deg, #11998e, #38ef7d);
     color: white;
+    background-size: 200% 200%;
+    animation: gradient-shift 15s ease infinite;
+}
+
+/* More beautiful gradients for different cards */
+.card-gradient-cosmic {
+    background: linear-gradient(to right, #8e2de2, #4a00e0);
+    color: white;
+    background-size: 200% 200%;
+    animation: gradient-shift 15s ease infinite;
+}
+
+.card-gradient-sunset {
+    background: linear-gradient(to right, #ff512f, #f09819);
+    color: white;
+    background-size: 200% 200%;
+    animation: gradient-shift 15s ease infinite;
+}
+
+.card-gradient-moonlit {
+    background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+    color: white;
+    background-size: 200% 200%;
+    animation: gradient-shift 15s ease infinite;
+}
+
+.card-gradient-aurora {
+    background: linear-gradient(to right, #1a2980, #26d0ce);
+    color: white;
+    background-size: 200% 200%;
+    animation: gradient-shift 15s ease infinite;
+}
+
+.card-gradient-magenta {
+    background: linear-gradient(to right, #fc466b, #3f5efb);
+    color: white;
+    background-size: 200% 200%;
+    animation: gradient-shift 15s ease infinite;
 }
 
 /* Specific department gradients */
 .accounting-gradient {
     background: linear-gradient(135deg, #005c97, #363795);
     color: white;
+    background-size: 200% 200%;
+    animation: gradient-shift 15s ease infinite;
 }
 
 .hr-gradient {
     background: linear-gradient(135deg, #ec008c, #fc6767);
     color: white;
+    background-size: 200% 200%;
+    animation: gradient-shift 15s ease infinite;
 }
 
 .developer-gradient {
     background: linear-gradient(135deg, #614385, #516395);
     color: white;
+    background-size: 200% 200%;
+    animation: gradient-shift 15s ease infinite;
 }
 
 /* Progress bar styles */
@@ -470,33 +524,72 @@
     }
 }
 
+/* Main Body Background */
+body {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+}
+
+/* Card backgrounds */
+.main-content .card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.main-content .card-header {
+    background: transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    color: #3a3a3a;
+    font-weight: 600;
+}
+
 /* Timer styles */
 .time-blocks {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-family: 'Roboto Mono', monospace, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 15px 0;
 }
 
 .time-block {
     text-align: center;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 10px;
+    border-radius: 8px;
+    min-width: 80px;
+    margin: 0 5px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .time-value {
-    font-size: 2rem;
+    font-size: 2.5rem;
     font-weight: bold;
     color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    line-height: 1;
+    margin-bottom: 5px;
 }
 
 .time-label {
     font-size: 0.8rem;
-    color: #6c757d;
+    color: rgba(255, 255, 255, 0.8);
     text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .time-divider {
-    font-size: 2rem;
+    font-size: 2.5rem;
     font-weight: bold;
-    color: #6c757d;
+    color: rgba(255, 255, 255, 0.8);
+    padding: 0 5px;
     display: flex;
     align-items: center;
+    margin-top: -10px;
 }
 
 /* Department Dashboard Widgets */

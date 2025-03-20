@@ -202,34 +202,34 @@
             </div>
         </div>
         {% endif %}
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Task Summary</h5>
+        <div class="card card-gradient-cosmic">
+            <div class="card-header border-0">
+                <h5 class="card-title mb-0 text-white">Task Summary</h5>
             </div>
             <div class="card-body">
                 <div class="row text-center">
                     <div class="col-6 mb-3">
-                        <div class="p-3 rounded bg-dark">
-                            <h3>{{ tasks|selectattr('status', 'equalto', 'to-do')|list|length }}</h3>
-                            <p class="mb-0 text-muted">To Do</p>
+                        <div class="p-3 rounded" style="background: rgba(0,0,0,0.2); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                            <h3 class="text-white">{{ tasks|selectattr('status', 'equalto', 'to-do')|list|length }}</h3>
+                            <p class="mb-0 text-white">To Do</p>
                         </div>
                     </div>
                     <div class="col-6 mb-3">
-                        <div class="p-3 rounded bg-dark">
-                            <h3>{{ tasks|selectattr('status', 'equalto', 'in-progress')|list|length }}</h3>
-                            <p class="mb-0 text-muted">In Progress</p>
+                        <div class="p-3 rounded" style="background: rgba(0,0,0,0.2); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                            <h3 class="text-white">{{ tasks|selectattr('status', 'equalto', 'in-progress')|list|length }}</h3>
+                            <p class="mb-0 text-white">In Progress</p>
                         </div>
                     </div>
                     <div class="col-6 mb-3">
-                        <div class="p-3 rounded bg-dark">
-                            <h3>{{ tasks|selectattr('status', 'equalto', 'in-review')|list|length }}</h3>
-                            <p class="mb-0 text-muted">In Review</p>
+                        <div class="p-3 rounded" style="background: rgba(0,0,0,0.2); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                            <h3 class="text-white">{{ tasks|selectattr('status', 'equalto', 'in-review')|list|length }}</h3>
+                            <p class="mb-0 text-white">In Review</p>
                         </div>
                     </div>
                     <div class="col-6 mb-3">
-                        <div class="p-3 rounded bg-dark">
-                            <h3>{{ tasks|selectattr('status', 'equalto', 'completed')|list|length }}</h3>
-                            <p class="mb-0 text-muted">Completed</p>
+                        <div class="p-3 rounded" style="background: rgba(0,0,0,0.2); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                            <h3 class="text-white">{{ tasks|selectattr('status', 'equalto', 'completed')|list|length }}</h3>
+                            <p class="mb-0 text-white">Completed</p>
                         </div>
                     </div>
                 </div>
