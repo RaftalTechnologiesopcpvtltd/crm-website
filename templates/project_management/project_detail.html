@@ -104,6 +104,56 @@
                         <div class="progress-bar bg-primary" role="progressbar" style="width: {{ project.progress }}%;" aria-valuenow="{{ project.progress }}" aria-valuemin="0" aria-valuemax="100"></div>
                     </div>
                 </div>
+                
+                <!-- Milestone Progress Section -->
+                {% if project.milestones %}
+                <div class="mt-4">
+                    <h6 class="fw-bold">Milestone Progress</h6>
+                    
+                    {% set total_milestone_amount = 0 %}
+                    {% set paid_milestone_amount = 0 %}
+                    {% set completed_milestone_amount = 0 %}
+                    {% set completed_count = 0 %}
+                    {% set total_milestones = project.milestones|length %}
+                    
+                    {% for milestone in project.milestones %}
+                        {% set total_milestone_amount = total_milestone_amount + milestone.amount %}
+                        {% if milestone.status == 'paid' %}
+                            {% set paid_milestone_amount = paid_milestone_amount + milestone.amount %}
+                            {% set completed_count = completed_count + 1 %}
+                        {% elif milestone.status == 'completed' %}
+                            {% set completed_milestone_amount = completed_milestone_amount + milestone.amount %}
+                            {% set completed_count = completed_count + 1 %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% set completion_percentage = (completed_count / total_milestones * 100)|int if total_milestones > 0 else 0 %}
+                    {% set payment_percentage = (paid_milestone_amount / total_milestone_amount * 100)|int if total_milestone_amount > 0 else 0 %}
+                    
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="small text-muted">Milestone Completion</span>
+                                <span class="small">{{ completed_count }}/{{ total_milestones }}</span>
+                            </div>
+                            <div class="progress mb-2" style="height: 15px;">
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ completion_percentage }}%;" 
+                                     aria-valuenow="{{ completion_percentage }}" aria-valuemin="0" aria-valuemax="100">{{ completion_percentage }}%</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="small text-muted">Payment Progress</span>
+                                <span class="small">${{ "%.2f"|format(paid_milestone_amount) }}/${{ "%.2f"|format(total_milestone_amount) }}</span>
+                            </div>
+                            <div class="progress mb-2" style="height: 15px;">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ payment_percentage }}%;" 
+                                     aria-valuenow="{{ payment_percentage }}" aria-valuemin="0" aria-valuemax="100">{{ payment_percentage }}%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
