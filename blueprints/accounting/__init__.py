@@ -1,6 +1,5 @@
 from flask import Blueprint
 
-accounting_bp = Blueprint('accounting', __name__, url_prefix='/accounting',
-                         template_folder='templates')
+accounting_bp = Blueprint('accounting', __name__, url_prefix='/accounting')
 
-from . import routes
+from . import routes, forms

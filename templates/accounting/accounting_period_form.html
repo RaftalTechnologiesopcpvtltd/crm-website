@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mt-4">{{ title }}</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('project_management.dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('accounting.fiscal_years') }}">Fiscal Years</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('accounting.accounting_periods', id=fiscal_year.id) }}">Accounting Periods</a></li>
+        <li class="breadcrumb-item active">{{ title }}</li>
+    </ol>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-calendar-week me-1"></i>
+            Accounting Period Information
+        </div>
+        <div class="card-body">
+            <form method="POST" action="">
+                {{ form.csrf_token }}
+                
+                {{ form.fiscal_year_id(value=fiscal_year.id, hidden="hidden") }}
+                
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            {{ form.name.label(class="form-label") }}
+                            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Enter a name for this period (e.g., "Q1 2025")</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.start_date.label(class="form-label") }}
+                            {{ form.start_date(class="form-control" + (" is-invalid" if form.start_date.errors else ""), type="date") }}
+                            {% if form.start_date.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.start_date.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Must be within fiscal year: {{ fiscal_year.start_date|formatdate }} - {{ fiscal_year.end_date|formatdate }}</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.end_date.label(class="form-label") }}
+                            {{ form.end_date(class="form-control" + (" is-invalid" if form.end_date.errors else ""), type="date") }}
+                            {% if form.end_date.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.end_date.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Must be within fiscal year and after start date</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-check mb-3">
+                    {{ form.is_closed(class="form-check-input") }}
+                    {{ form.is_closed.label(class="form-check-label") }}
+                    <small class="form-text text-muted d-block">
+                        A closed period cannot be modified and no new transactions can be posted to it.
+                    </small>
+                </div>
+                
+                <div class="form-group">
+                    {{ form.submit(class="btn btn-primary") }}
+                    <a href="{{ url_for('accounting.accounting_periods', id=fiscal_year.id) }}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

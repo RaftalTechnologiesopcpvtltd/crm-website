@@ -60,6 +60,39 @@
                         </li>
                         {% endif %}
                         
+                        {% if current_user.is_admin %}
+                        <hr>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="collapse" href="#accountingSubmenu" role="button" aria-expanded="false" aria-controls="accountingSubmenu">
+                                <i class="fas fa-calculator me-2"></i>
+                                Accounting
+                                <i class="fas fa-caret-down float-end mt-1"></i>
+                            </a>
+                            <div class="collapse {% if 'accounting.' in request.endpoint %}show{% endif %}" id="accountingSubmenu">
+                                <ul class="nav flex-column ps-3">
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if 'accounting.chart_of_accounts' == request.endpoint %}active{% endif %}" href="{{ url_for('accounting.chart_of_accounts') }}">
+                                            <i class="fas fa-list me-2"></i>
+                                            Chart of Accounts
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if 'accounting.fiscal_years' == request.endpoint %}active{% endif %}" href="{{ url_for('accounting.fiscal_years') }}">
+                                            <i class="fas fa-calendar me-2"></i>
+                                            Fiscal Years
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if 'accounting.journal_entries' == request.endpoint %}active{% endif %}" href="{{ url_for('accounting.journal_entries') }}">
+                                            <i class="fas fa-book me-2"></i>
+                                            Journal Entries
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+                        {% endif %}
+                        
                         <hr>
                         <li class="nav-item">
                             <a class="nav-link {% if 'hr.employees' in request.endpoint %}active{% endif %}" href="{{ url_for('hr.employees') }}">
