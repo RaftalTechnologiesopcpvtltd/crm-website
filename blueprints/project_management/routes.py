@@ -493,10 +493,10 @@ def new_payment():
             notes=form.notes.data
         )
         
-        if form.milestone_id.data > 0:
+        if form.milestone_id.data and form.milestone_id.data > 0:
             payment.milestone_id = form.milestone_id.data
             
-        if form.account_id.data > 0:
+        if form.account_id.data and form.account_id.data > 0:
             payment.account_id = form.account_id.data
             
         if form.payment_date.data:
