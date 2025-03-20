@@ -184,7 +184,7 @@ def new_leave():
             start_date=form.start_date.data,
             end_date=form.end_date.data,
             reason=form.reason.data,
-            status='approved' if is_hr_or_admin else 'pending'
+            status='approved' if current_user.is_admin else 'pending'
         )
         db.session.add(leave)
         db.session.commit()
@@ -213,16 +213,29 @@ def edit_leave(id):
     
     form = LeaveForm(obj=leave)
     
-    # HR or Admin can edit all fields including status
-    if is_hr_or_admin:
+    # Only Admin can approve/reject leave requests, HR can only edit other fields
+    if current_user.is_admin:
         form.employee_id.choices = [(e.id, e.full_name) for e in Employee.query.all()]
         form.status.choices = [('pending', 'Pending'), ('approved', 'Approved'), ('rejected', 'Rejected')]
+    elif current_user.department == 'hr':
+        form.employee_id.choices = [(e.id, e.full_name) for e in Employee.query.all()]
+        # HR can view but not change status field
+        form.status.render_kw = {'disabled': 'disabled'}
     else:
         form.employee_id.render_kw = {'readonly': True}
         del form.status
     
     if form.validate_on_submit():
+        # For HR users, preserve the original status value
+        original_status = leave.status if current_user.department == 'hr' and not current_user.is_admin else None
+        
+        # Update the leave request with form data
         form.populate_obj(leave)
+        
+        # If HR user (not admin), restore the original status
+        if original_status is not None:
+            leave.status = original_status
+            
         db.session.commit()
         
         flash('Leave request updated successfully!', 'success')
