@@ -405,6 +405,13 @@ def new_accounting_period(year_id):
                           title='New Accounting Period')
 
 # Journal Entries
+@accounting_bp.route('/tax-configuration')
+@login_required
+def tax_config():
+    """Tax configuration page"""
+    check_admin()
+    return render_template('accounting/tax_config.html', title='Tax Configuration')
+
 @accounting_bp.route('/journal-entries')
 @login_required
 def journal_entries():
