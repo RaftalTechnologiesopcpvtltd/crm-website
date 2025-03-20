@@ -358,12 +358,26 @@ def new_journal_entry():
     form.period_id.choices = period_choices
     
     if form.validate_on_submit():
-        # Generate a unique entry number
-        last_entry = JournalEntry.query.order_by(JournalEntry.id.desc()).first()
-        entry_number = f"JE-{datetime.now().strftime('%Y%m')}-{(last_entry.id + 1 if last_entry else 1):04d}"
+        # Generate a unique entry number - add timestamp to ensure uniqueness
+        now = datetime.now()
+        timestamp = now.strftime('%Y%m%d%H%M%S')
+        
+        if form.entry_number.data:
+            # Check if user-provided entry number is unique
+            existing = JournalEntry.query.filter_by(entry_number=form.entry_number.data).first()
+            if existing:
+                form.entry_number.errors = list(form.entry_number.errors) if form.entry_number.errors else []
+                form.entry_number.errors.append('This entry number already exists. Please use a unique value.')
+                return render_template('accounting/journal_entry_form.html', form=form, title='New Journal Entry')
+            entry_number = form.entry_number.data
+        else:
+            # Generate a unique entry number with random suffix to avoid collisions
+            import random
+            random_suffix = random.randint(1000, 9999)
+            entry_number = f"JE-{now.strftime('%Y%m')}-{timestamp[-4:]}-{random_suffix}"
         
         entry = JournalEntry(
-            entry_number=entry_number if not form.entry_number.data else form.entry_number.data,
+            entry_number=entry_number,
             date=form.date.data,
             period_id=form.period_id.data,
             memo=form.memo.data,

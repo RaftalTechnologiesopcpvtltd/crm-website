@@ -65,15 +65,17 @@ class JournalEntryLineForm(FlaskForm):
     credit_amount = DecimalField('Credit', places=2, validators=[Optional()], default=Decimal('0.00'))
     submit = SubmitField('Add Line Item')
     
-    def validate(self):
-        if not super(JournalEntryLineForm, self).validate():
+    def validate(self, **kwargs):
+        if not super(JournalEntryLineForm, self).validate(**kwargs):
             return False
         
         if self.debit_amount.data == 0 and self.credit_amount.data == 0:
+            self.debit_amount.errors = list(self.debit_amount.errors) if self.debit_amount.errors else []
             self.debit_amount.errors.append('Either debit or credit amount must be greater than zero')
             return False
         
         if self.debit_amount.data > 0 and self.credit_amount.data > 0:
+            self.credit_amount.errors = list(self.credit_amount.errors) if self.credit_amount.errors else []
             self.credit_amount.errors.append('An entry cannot have both debit and credit amounts')
             return False
         
