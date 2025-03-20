@@ -240,6 +240,47 @@ def new_project():
             )
             db.session.add(sale)
             db.session.commit()
+            
+            # Create accounting journal entry for new project (if accounting module is enabled)
+            try:
+                from blueprints.accounting.routes import create_journal_entry
+                from models_accounting import ChartOfAccount
+                
+                # Find appropriate accounts
+                revenue_account = ChartOfAccount.query.filter_by(name='Sales Revenue').first()
+                ar_account = ChartOfAccount.query.filter_by(name='Accounts Receivable').first()
+                
+                if revenue_account and ar_account:
+                    # Prepare line items
+                    line_items = [
+                        # Debit Accounts Receivable
+                        {
+                            'account_id': ar_account.id,
+                            'debit_amount': float(project.budget),
+                            'credit_amount': 0,
+                            'description': f'Project {project.name} - Expected Revenue'
+                        },
+                        # Credit Revenue
+                        {
+                            'account_id': revenue_account.id,
+                            'debit_amount': 0,
+                            'credit_amount': float(project.budget),
+                            'description': f'Project {project.name} - Expected Revenue'
+                        }
+                    ]
+                    
+                    # Create journal entry
+                    create_journal_entry(
+                        entry_type='PROJECT',
+                        transaction_date=project.start_date,
+                        reference=f'PRJ-{project.id}',
+                        memo=f'New project: {project.name}',
+                        line_items=line_items,
+                        user_id=current_user.id
+                    )
+            except Exception as e:
+                # Log error but don't prevent project creation if accounting fails
+                print(f"Error creating accounting entry for project: {str(e)}")
         
         flash('Project created successfully!', 'success')
         return redirect(url_for('project_management.project_detail', id=project.id))
