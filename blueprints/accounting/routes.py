@@ -189,10 +189,10 @@ def initialize_accounting():
         
         db.session.commit()
 
-# Check if user is admin - decorator
+# Check if user has accounting access - decorator
 def check_admin():
-    if not current_user.is_admin:
-        flash('You must be an administrator to access this page.', 'danger')
+    if not current_user.is_admin and not current_user.department == 'accounting':
+        flash('You must be an administrator or accounting staff to access this page.', 'danger')
         return redirect(url_for('project_management.dashboard'))
 
 # Chart of Accounts
@@ -563,10 +563,10 @@ def post_journal_entry(id):
 @login_required
 def general_ledger():
     """General Ledger - View all financial transactions"""
-    # Check if user is admin
-    if not current_user.is_admin:
-        flash('Access denied. You need admin privileges to view the general ledger.', 'danger')
-        return redirect(url_for('accounts.login'))
+    # Check if user has accounting access
+    if not current_user.is_admin and not current_user.department == 'accounting':
+        flash('Access denied. You need accounting privileges to view the general ledger.', 'danger')
+        return redirect(url_for('project_management.dashboard'))
     
     # Get all accounts for the filter dropdown
     accounts = ChartOfAccount.query.order_by(ChartOfAccount.code).all()

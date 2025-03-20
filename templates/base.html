@@ -62,7 +62,7 @@
                         </li>
                         {% endif %}
                         
-                        {% if current_user.is_admin %}
+                        {% if current_user.is_admin or current_user.department == 'accounting' %}
                         <hr>
                         <li class="nav-item">
                             <a class="nav-link" data-bs-toggle="collapse" href="#accountingSubmenu" role="button" aria-expanded="false" aria-controls="accountingSubmenu">
@@ -150,25 +150,52 @@
                         
                         <hr>
                         <li class="nav-item">
-                            <a class="nav-link {% if 'hr.employees' in request.endpoint %}active{% endif %}" href="{{ url_for('hr.employees') }}">
+                            <a class="nav-link" data-bs-toggle="collapse" href="#hrSubmenu" role="button" aria-expanded="false" aria-controls="hrSubmenu">
                                 <i class="fas fa-users me-2"></i>
-                                Employees
+                                HR Management
+                                <i class="fas fa-caret-down float-end mt-1"></i>
                             </a>
+                            <div class="collapse {% if 'hr.' in request.endpoint %}show{% endif %}" id="hrSubmenu">
+                                <ul class="nav flex-column ps-3">
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if 'hr.employees' in request.endpoint %}active{% endif %}" href="{{ url_for('hr.employees') }}">
+                                            <i class="fas fa-users me-2"></i>
+                                            Employees
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if 'hr.leaves' in request.endpoint %}active{% endif %}" href="{{ url_for('hr.leaves') }}">
+                                            <i class="fas fa-calendar-alt me-2"></i>
+                                            Leave Management
+                                        </a>
+                                    </li>
+                                    {% if current_user.is_admin or current_user.department == 'hr' %}
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if 'hr.attendance' in request.endpoint %}active{% endif %}" href="{{ url_for('hr.attendance') }}">
+                                            <i class="fas fa-clipboard-check me-2"></i>
+                                            Attendance
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                    {% if current_user.is_admin or current_user.department == 'hr' %}
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if 'hr.payroll' in request.endpoint %}active{% endif %}" href="{{ url_for('hr.payroll') }}">
+                                            <i class="fas fa-money-bill-wave me-2"></i>
+                                            Payroll
+                                        </a>
+                                    </li>
+                                    {% if 'hr.payroll' in request.endpoint %}
+                                    <li class="nav-item ms-3">
+                                        <a class="nav-link {% if 'hr.calculate_payroll' == request.endpoint %}active{% endif %}" href="{{ url_for('hr.calculate_payroll') }}">
+                                            <i class="fas fa-calculator me-2"></i>
+                                            Calculate Payroll
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                    {% endif %}
+                                </ul>
+                            </div>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if 'hr.leaves' in request.endpoint %}active{% endif %}" href="{{ url_for('hr.leaves') }}">
-                                <i class="fas fa-calendar-alt me-2"></i>
-                                Leave Management
-                            </a>
-                        </li>
-                        {% if current_user.is_admin %}
-                        <li class="nav-item">
-                            <a class="nav-link {% if 'hr.payroll' in request.endpoint %}active{% endif %}" href="{{ url_for('hr.payroll') }}">
-                                <i class="fas fa-money-bill-wave me-2"></i>
-                                Payroll
-                            </a>
-                        </li>
-                        {% endif %}
                         
                         <hr>
                         {% if current_user.is_admin %}
