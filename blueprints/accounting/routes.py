@@ -474,21 +474,36 @@ def post_journal_entry(id):
 @login_required
 def general_ledger():
     """General Ledger - View all financial transactions"""
-    check_admin()
+    # Check if user is admin
+    if not current_user.is_admin:
+        flash('Access denied. You need admin privileges to view the general ledger.', 'danger')
+        return redirect(url_for('accounts.login'))
+    
+    # Get all accounts for the filter dropdown
+    accounts = ChartOfAccount.query.order_by(ChartOfAccount.code).all()
     
     # Get filter parameters
     account_id = request.args.get('account_id', type=int)
-    from_date = request.args.get('from_date')
-    to_date = request.args.get('to_date')
+    from_date_str = request.args.get('from_date')
+    to_date_str = request.args.get('to_date')
     entry_type = request.args.get('entry_type')
     
-    # Convert string dates to date objects
-    if from_date:
-        from_date = datetime.strptime(from_date, '%Y-%m-%d').date()
-    if to_date:
-        to_date = datetime.strptime(to_date, '%Y-%m-%d').date()
+    # Convert date strings to date objects
+    from_date = None
+    to_date = None
+    if from_date_str:
+        try:
+            from_date = datetime.strptime(from_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            pass
     
-    # Base query for journal entry lines
+    if to_date_str:
+        try:
+            to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            pass
+    
+    # Base query for journal entry lines with joins
     query = db.session.query(
         JournalEntryLine, 
         JournalEntry, 
@@ -499,8 +514,6 @@ def general_ledger():
     ).join(
         ChartOfAccount, 
         JournalEntryLine.account_id == ChartOfAccount.id
-    ).filter(
-        JournalEntry.status == 'POSTED'  # Only include posted entries
     )
     
     # Apply filters
@@ -516,21 +529,28 @@ def general_ledger():
     if entry_type:
         query = query.filter(JournalEntry.entry_type == entry_type)
     
-    # Order by date (newest first) and then by entry number
-    results = query.order_by(JournalEntry.date.desc(), JournalEntry.entry_number).all()
+    # Order by account, then date
+    results = query.order_by(
+        ChartOfAccount.code,
+        JournalEntry.date,
+        JournalEntry.id
+    ).all()
     
-    # Get all accounts for the filter dropdown
-    accounts = ChartOfAccount.query.filter_by(is_active=True).order_by(ChartOfAccount.code).all()
+    # Entry types for filter dropdown
+    entry_types = [
+        ('MANUAL', 'Manual'),
+        ('SYSTEM', 'System'),
+        ('RECURRING', 'Recurring')
+    ]
     
-    # Get entry types for the filter dropdown
-    entry_types = [('MANUAL', 'Manual'), ('SYSTEM', 'System'), ('RECURRING', 'Recurring')]
-    
-    return render_template('accounting/general_ledger.html', 
-                          results=results,
-                          accounts=accounts,
-                          entry_types=entry_types,
-                          selected_account_id=account_id,
-                          selected_from_date=from_date,
-                          selected_to_date=to_date,
-                          selected_entry_type=entry_type,
-                          title='General Ledger')
+    return render_template(
+        'accounting/general_ledger.html',
+        title='General Ledger',
+        accounts=accounts,
+        results=results,
+        entry_types=entry_types,
+        selected_account_id=account_id,
+        selected_from_date=from_date,
+        selected_to_date=to_date,
+        selected_entry_type=entry_type
+    )
