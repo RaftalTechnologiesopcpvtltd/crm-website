@@ -83,12 +83,14 @@
                         {% endif %}
                     </div>
                     
-                    {% if admin_view and current_user.is_admin and form.is_admin is defined %}
+                    {% if admin_view and current_user.is_admin and form.is_admin %}
                     <div class="form-check mb-3">
-                        {{ form.is_admin(class="form-check-input", id="is_admin") }}
-                        <label class="form-check-label" for="is_admin">
-                            Grant Admin Privileges
-                        </label>
+                        <div class="form-check">
+                            {{ form.is_admin(class_="form-check-input", id="is_admin") }}
+                            <label class="form-check-label" for="is_admin">
+                                Grant Admin Privileges
+                            </label>
+                        </div>
                     </div>
                     {% endif %}
                     

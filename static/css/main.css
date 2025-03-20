@@ -88,6 +88,202 @@
     color: var(--bs-secondary);
 }
 
+/* Welcome Dashboard Animations */
+.welcome-card {
+    overflow: hidden;
+    border: none;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.welcome-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.welcome-text {
+    flex: 1;
+}
+
+.welcome-title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.welcome-subtitle {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    margin-bottom: 1rem;
+    animation: fadeInUp 1s ease-out forwards;
+}
+
+.welcome-date {
+    font-size: 1rem;
+    opacity: 0.8;
+    animation: fadeInUp 1.2s ease-out forwards;
+}
+
+.welcome-graphic {
+    flex: 0 0 auto;
+    margin-left: 2rem;
+}
+
+.welcome-icon {
+    font-size: 4rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Employee Insights Cards */
+.insight-card {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background-color: #f8f9fa;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    height: 100%;
+    opacity: 0;
+}
+
+.insight-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+
+.insight-icon i {
+    font-size: 1.5rem;
+}
+
+.insight-content {
+    flex: 1;
+}
+
+.insight-title {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    color: #666;
+}
+
+.insight-data {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 0;
+    color: #333;
+}
+
+.insight-detail {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+/* Animation keyframes */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Animation classes */
+.fadeIn {
+    animation: fadeIn 1s ease-out forwards;
+}
+
+.slide-in-left {
+    animation: slideInLeft 0.5s ease-out forwards;
+}
+
+.slide-in-right {
+    animation: slideInRight 0.5s ease-out forwards;
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+.pulse-danger {
+    animation: pulse 1.5s infinite;
+    color: var(--bs-danger);
+}
+
+.counter {
+    display: inline-block;
+    animation: fadeInUp 1s forwards;
+}
+
+/* Animation delays */
+.animation-delay-1 {
+    animation-delay: 0.2s;
+}
+
+.animation-delay-2 {
+    animation-delay: 0.4s;
+}
+
+.animation-delay-3 {
+    animation-delay: 0.6s;
+}
+
+.animation-delay-4 {
+    animation-delay: 0.8s;
+}
+
 /* Print styles for PDF export */
 @media print {
     .no-print {

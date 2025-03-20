@@ -23,6 +23,46 @@ document.addEventListener('DOMContentLoaded', function() {
         return new bootstrap.Popover(popoverTriggerEl);
     });
 
+    // Dashboard counter animation
+    const counters = document.querySelectorAll('.counter');
+    if (counters.length > 0) {
+        const animateCounters = () => {
+            counters.forEach(counter => {
+                const target = parseInt(counter.textContent);
+                const count = +counter.innerText;
+                
+                const speed = 200; // Animation speed - lower is faster
+                const inc = target / speed;
+                
+                if (count < target) {
+                    counter.innerText = Math.ceil(count + inc);
+                    setTimeout(animateCounters, 1);
+                } else {
+                    counter.innerText = target;
+                }
+            });
+        };
+        
+        // Start counter animations after a short delay to ensure they're visible
+        setTimeout(animateCounters, 500);
+    }
+    
+    // Animate elements when they come into view
+    const animateOnScroll = () => {
+        const elements = document.querySelectorAll('.fadeIn, .slide-in-left, .slide-in-right');
+        elements.forEach(element => {
+            const elementTop = element.getBoundingClientRect().top;
+            const elementVisible = 150;
+            if (elementTop < window.innerHeight - elementVisible) {
+                element.style.opacity = '1';
+            }
+        });
+    };
+    
+    // Run animation check on scroll and on initial load
+    window.addEventListener('scroll', animateOnScroll);
+    animateOnScroll();
+    
     // Task status update buttons
     const statusButtons = document.querySelectorAll('.task-status-btn');
     statusButtons.forEach(button => {

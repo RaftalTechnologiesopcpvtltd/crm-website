@@ -5,6 +5,136 @@
 {% block header %}Dashboard{% endblock %}
 
 {% block content %}
+<!-- Animated Welcome Banner -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card welcome-card bg-primary text-white">
+            <div class="card-body p-4">
+                <div class="welcome-container">
+                    <div class="welcome-text">
+                        <h1 class="welcome-title">Welcome, {{ current_user.username }}!</h1>
+                        {% if current_user.employee %}
+                        <p class="welcome-subtitle">{{ current_user.employee.position }} at {{ current_user.employee.department }}</p>
+                        {% endif %}
+                        <p class="welcome-date">Today is {{ now.strftime('%A, %B %d, %Y') }}</p>
+                    </div>
+                    <div class="welcome-graphic">
+                        <i class="fas fa-chart-line welcome-icon pulse"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Personalized Employee Insights -->
+{% if current_user.employee and employee_insights %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0"><i class="fas fa-lightbulb me-2"></i>Your Insights</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Task Completion -->
+                    <div class="col-md-3 mb-3">
+                        <div class="insight-card fadeIn animation-delay-1">
+                            <div class="insight-icon bg-success text-white">
+                                <i class="fas fa-tasks"></i>
+                            </div>
+                            <div class="insight-content">
+                                <h5 class="insight-title">Task Completion</h5>
+                                <div class="insight-data">{{ employee_insights.completion_rate }}%</div>
+                                <div class="insight-detail">{{ employee_insights.user_completed_tasks }} of {{ employee_insights.user_total_tasks }} tasks</div>
+                                <div class="progress mt-2">
+                                    <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar" 
+                                        style="width: {{ employee_insights.completion_rate }}%;" 
+                                        aria-valuenow="{{ employee_insights.completion_rate }}" 
+                                        aria-valuemin="0" 
+                                        aria-valuemax="100">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Employment Duration -->
+                    <div class="col-md-3 mb-3">
+                        <div class="insight-card fadeIn animation-delay-2">
+                            <div class="insight-icon bg-primary text-white">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <div class="insight-content">
+                                <h5 class="insight-title">With Us For</h5>
+                                <div class="insight-data">{{ employee_insights.days_employed }} days</div>
+                                <div class="insight-detail">Since {{ current_user.employee.hire_date.strftime('%b %d, %Y') }}</div>
+                                <div class="progress mt-2">
+                                    <div class="progress-bar bg-primary progress-bar-striped" role="progressbar" 
+                                        style="width: {{ (employee_insights.days_employed / 365 * 100)|round|min(100) }}%;" 
+                                        aria-valuenow="{{ employee_insights.days_employed }}" 
+                                        aria-valuemin="0" 
+                                        aria-valuemax="365">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Overdue Tasks -->
+                    <div class="col-md-3 mb-3">
+                        <div class="insight-card fadeIn animation-delay-3">
+                            <div class="insight-icon {% if employee_insights.overdue_tasks|length > 0 %}bg-danger{% else %}bg-success{% endif %} text-white">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="insight-content">
+                                <h5 class="insight-title">Overdue Tasks</h5>
+                                <div class="insight-data">{{ employee_insights.overdue_tasks|length }}</div>
+                                <div class="insight-detail">
+                                    {% if employee_insights.overdue_tasks|length > 0 %}
+                                    Requires attention
+                                    {% else %}
+                                    All caught up!
+                                    {% endif %}
+                                </div>
+                                {% if employee_insights.overdue_tasks|length > 0 %}
+                                <a href="{{ url_for('project_management.tasks') }}" class="btn btn-sm btn-outline-danger mt-2 pulse-danger">View Tasks</a>
+                                {% else %}
+                                <span class="badge bg-success mt-2">Up to date</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Upcoming Leave -->
+                    <div class="col-md-3 mb-3">
+                        <div class="insight-card fadeIn animation-delay-4">
+                            <div class="insight-icon bg-info text-white">
+                                <i class="fas fa-umbrella-beach"></i>
+                            </div>
+                            <div class="insight-content">
+                                <h5 class="insight-title">Upcoming Leave</h5>
+                                {% if employee_insights.upcoming_leaves %}
+                                <div class="insight-data">{{ employee_insights.upcoming_leaves|length }}</div>
+                                <div class="insight-detail">
+                                    Next: {{ employee_insights.upcoming_leaves[0].start_date.strftime('%b %d') }}
+                                </div>
+                                <a href="{{ url_for('hr.leaves') }}" class="btn btn-sm btn-outline-info mt-2">View Details</a>
+                                {% else %}
+                                <div class="insight-data">0</div>
+                                <div class="insight-detail">No upcoming leave</div>
+                                <a href="{{ url_for('hr.new_leave') }}" class="btn btn-sm btn-outline-info mt-2">Request Leave</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="row">
     <!-- Project Statistics -->
     <div class="col-lg-6">
@@ -15,30 +145,30 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <div class="stat-card bg-dark">
+                        <div class="stat-card bg-dark slide-in-left">
                             <i class="fas fa-project-diagram text-primary"></i>
-                            <h2>{{ total_projects }}</h2>
+                            <h2 class="counter">{{ total_projects }}</h2>
                             <p>Total Projects</p>
                         </div>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <div class="stat-card bg-dark">
+                        <div class="stat-card bg-dark slide-in-right">
                             <i class="fas fa-check-circle text-success"></i>
-                            <h2>{{ completed_projects }}</h2>
+                            <h2 class="counter">{{ completed_projects }}</h2>
                             <p>Completed Projects</p>
                         </div>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <div class="stat-card bg-dark">
+                        <div class="stat-card bg-dark slide-in-left">
                             <i class="fas fa-spinner text-warning"></i>
-                            <h2>{{ in_progress_projects }}</h2>
+                            <h2 class="counter">{{ in_progress_projects }}</h2>
                             <p>In Progress</p>
                         </div>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <div class="stat-card bg-dark">
+                        <div class="stat-card bg-dark slide-in-right">
                             <i class="fas fa-clipboard-list text-info"></i>
-                            <h2>{{ planning_projects }}</h2>
+                            <h2 class="counter">{{ planning_projects }}</h2>
                             <p>Planning</p>
                         </div>
                     </div>
@@ -56,30 +186,30 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <div class="stat-card bg-dark">
+                        <div class="stat-card bg-dark slide-in-left">
                             <i class="fas fa-tasks text-primary"></i>
-                            <h2>{{ total_tasks }}</h2>
+                            <h2 class="counter">{{ total_tasks }}</h2>
                             <p>Total Tasks</p>
                         </div>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <div class="stat-card bg-dark">
+                        <div class="stat-card bg-dark slide-in-right">
                             <i class="fas fa-check text-success"></i>
-                            <h2>{{ completed_tasks }}</h2>
+                            <h2 class="counter">{{ completed_tasks }}</h2>
                             <p>Completed Tasks</p>
                         </div>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <div class="stat-card bg-dark">
+                        <div class="stat-card bg-dark slide-in-left">
                             <i class="fas fa-spinner text-warning"></i>
-                            <h2>{{ in_progress_tasks }}</h2>
+                            <h2 class="counter">{{ in_progress_tasks }}</h2>
                             <p>In Progress</p>
                         </div>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <div class="stat-card bg-dark">
+                        <div class="stat-card bg-dark slide-in-right">
                             <i class="fas fa-list text-info"></i>
-                            <h2>{{ todo_tasks }}</h2>
+                            <h2 class="counter">{{ todo_tasks }}</h2>
                             <p>To-Do</p>
                         </div>
                     </div>
