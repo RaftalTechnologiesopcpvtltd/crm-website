@@ -190,8 +190,8 @@
                     <tfoot>
                         <tr class="table-dark">
                             <th colspan="2">Totals</th>
-                            <th>{{ entry.total_debits()|format_currency }}</th>
-                            <th>{{ entry.total_credits()|format_currency }}</th>
+                            <th>{{ entry.total_debits|format_currency }}</th>
+                            <th>{{ entry.total_credits|format_currency }}</th>
                             {% if entry.status == 'DRAFT' %}
                             <th></th>
                             {% endif %}
@@ -199,10 +199,10 @@
                         <tr>
                             <td colspan="{{ 5 if entry.status == 'DRAFT' else 4 }}">
                                 <div class="text-end">
-                                    {% if entry.is_balanced() %}
+                                    {% if entry.is_balanced %}
                                     <span class="badge bg-success">Balanced</span>
                                     {% else %}
-                                    <span class="badge bg-danger">Unbalanced - Difference: {{ (entry.total_debits() - entry.total_credits())|abs|format_currency }}</span>
+                                    <span class="badge bg-danger">Unbalanced - Difference: {{ (entry.total_debits - entry.total_credits)|abs|format_currency }}</span>
                                     {% endif %}
                                 </div>
                             </td>
@@ -216,7 +216,7 @@
                     <i class="fas fa-arrow-left"></i> Back to Journal Entries
                 </a>
                 
-                {% if entry.status == 'DRAFT' and entry.is_balanced() %}
+                {% if entry.status == 'DRAFT' and entry.is_balanced %}
                 <a href="{{ url_for('accounting.post_journal_entry', id=entry.id) }}" class="btn btn-success">
                     <i class="fas fa-check"></i> Post Journal Entry
                 </a>
