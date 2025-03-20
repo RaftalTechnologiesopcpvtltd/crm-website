@@ -35,6 +35,32 @@
                         <h6 class="fw-bold">Client</h6>
                         <p>{{ project.client or 'Not specified' }}</p>
                         
+                        {% if project.client_user %}
+                        <h6 class="fw-bold">Client User</h6>
+                        <p>{{ project.client_user.name }} 
+                            {% if project.client_user.is_existing_user %}
+                            <span class="badge bg-info">Existing User</span>
+                            {% endif %}
+                        </p>
+                        {% endif %}
+                        
+                        <h6 class="fw-bold">Platform</h6>
+                        <p>
+                            <span class="badge {{ 'bg-success' if project.platform == 'fiverr' else 'bg-info' if project.platform == 'upwork' else 'bg-secondary' }}">
+                                {{ project.platform|capitalize }}
+                            </span>
+                            {% if project.platform_project_id %}
+                            <span class="text-muted">(ID: {{ project.platform_project_id }})</span>
+                            {% endif %}
+                        </p>
+                        
+                        <h6 class="fw-bold">Payment Status</h6>
+                        <p>
+                            <span class="badge {{ 'bg-success' if project.payment_status == 'transferred' else 'bg-warning text-dark' if project.payment_status == 'in-platform' else 'bg-info text-dark' if project.payment_status == 'in-review' else 'bg-secondary' }}">
+                                {{ project.payment_status|replace('-', ' ')|capitalize }}
+                            </span>
+                        </p>
+                        
                         <h6 class="fw-bold">Status</h6>
                         <p>
                             <span class="badge {{ 'bg-success' if project.status == 'completed' else 'bg-warning text-dark' if project.status == 'in-progress' else 'bg-info text-dark' if project.status == 'planning' else 'bg-danger' }}">
@@ -57,6 +83,9 @@
                             {{ time_info.time_str }}
                         </p>
                         {% endif %}
+                        
+                        <h6 class="fw-bold">Budget</h6>
+                        <p>{{ "$%.2f"|format(project.budget) if project.budget else 'Not specified' }}</p>
                     </div>
                 </div>
                 
@@ -111,6 +140,42 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Milestones</h5>
+                <a href="{{ url_for('project_management.new_milestone', project_id=project.id) }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus me-1"></i> Add
+                </a>
+            </div>
+            <div class="card-body">
+                {% if project.milestones %}
+                <ul class="list-group list-group-flush">
+                    {% for milestone in project.milestones %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">{{ milestone.name }}</h6>
+                            <p class="text-muted small mb-1">Due: {{ milestone.due_date | formatdate }}</p>
+                            <span class="badge {{ 'bg-success' if milestone.status == 'paid' else 'bg-warning text-dark' if milestone.status == 'completed' else 'bg-secondary' }}">
+                                {{ milestone.status|capitalize }}
+                            </span>
+                        </div>
+                        <div class="text-end">
+                            <div class="text-muted mb-2">${{ "%.2f"|format(milestone.amount) }}</div>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('project_management.edit_milestone', id=milestone.id) }}" class="btn btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted">No milestones added yet</p>
+                {% endif %}
             </div>
         </div>
     </div>
