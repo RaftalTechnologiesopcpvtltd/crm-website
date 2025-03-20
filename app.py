@@ -4,6 +4,7 @@ from datetime import datetime
 from flask import Flask, flash, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, current_user
+from flask_migrate import Migrate
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.exceptions import HTTPException
 
@@ -17,6 +18,7 @@ class Base(DeclarativeBase):
 # Initialize extensions
 db = SQLAlchemy(model_class=Base)
 login_manager = LoginManager()
+migrate = Migrate()
 
 def create_app():
     app = Flask(__name__)
@@ -33,6 +35,7 @@ def create_app():
     # Initialize extensions with the app
     db.init_app(app)
     login_manager.init_app(app)
+    migrate.init_app(app, db)
     
     # Configure login manager
     login_manager.login_view = 'accounts.login'
