@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, Response
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, Response, current_app
 from flask_login import login_required, current_user
 from app import db
 from models import Project, Task, User, Employee, ClientUser, ProjectMilestone, ProjectPayment, Account, Sales, Leave, Payroll, Attendance
@@ -469,11 +469,25 @@ def delete_project(id):
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('project_management.projects'))
     
-    project = Project.query.get_or_404(id)
-    db.session.delete(project)
-    db.session.commit()
+    # Use a database transaction to handle deletion safely
+    try:
+        project = Project.query.get_or_404(id)
+        
+        # Delete related payments first (redundant with cascade, but to be safe)
+        payments = ProjectPayment.query.filter_by(project_id=id).all()
+        for payment in payments:
+            db.session.delete(payment)
+            
+        # Then delete the project
+        db.session.delete(project)
+        db.session.commit()
+        
+        flash('Project deleted successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error deleting project: {str(e)}")
+        flash(f'Error deleting project: {str(e)}', 'danger')
     
-    flash('Project deleted successfully!', 'success')
     return redirect(url_for('project_management.projects'))
 
 @project_bp.route('/projects/export')
