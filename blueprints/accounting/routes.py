@@ -1,6 +1,7 @@
 from flask import render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from datetime import datetime, date
+from decimal import Decimal
 from app import db
 from models_accounting import ChartOfAccount, FiscalYear, AccountingPeriod, JournalEntry, JournalEntryLine
 from models_accounting import Currency, ExchangeRate, Tax, Vendor, VendorInvoice, VendorPayment
