@@ -77,40 +77,11 @@
                         
                         {% if project.end_date %}
                         <h6 class="fw-bold">Deadline Timer</h6>
-                        <div class="card mb-3">
-  
-</div>
-                        <script>
-    function updateTimer() {
-        const endDate = new Date("{{ project.end_date }}");
-        const now = new Date();
-        const diff = endDate - now;
-        
-        let timerText = '';
-        let cssClass = '';
-        
-        if (diff > 0) {
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-            
-            timerText = `${days}d ${hours}h ${minutes}m ${seconds}s`;
-            cssClass = days < 7 ? 'text-warning' : 'text-success';
-        } else {
-            timerText = 'Deadline passed';
-            cssClass = 'text-danger';
-        }
-        
-        const timerElement = document.getElementById('timer-text');
-        timerElement.textContent = timerText;
-        timerElement.className = `display-6 fw-bold ${cssClass}`;
-    }
-    
-    updateTimer();
-    setInterval(updateTimer, 1000);
-</script>
-                       
+                        {% set time_info = project.end_date | time_remaining %}
+                        <p class="{{ time_info.css_class }} fw-bold">
+                            <i class="fas fa-clock me-1"></i>
+                            {{ time_info.time_str }}
+                        </p>
                         {% endif %}
                         
                         <h6 class="fw-bold">Budget</h6>
@@ -138,52 +109,6 @@
     </div>
     
     <div class="col-md-4">
-        {% if project.end_date %}
-        <div class="card mb-4">
-            <div class="card-header bg-dark text-white">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-hourglass-half me-2"></i>Project Timer
-                </h5>
-            </div>
-            <div class="card-body text-center">
-                <h5 class="card-title mb-3">
-                    <i class="fas fa-clock me-2"></i>Project Deadline
-                </h5>
-                <div id="timer-text" class="display-6 fw-bold"></div>
-            </div>
-            <script>
-                function updateTimer() {
-                    const endDate = new Date("{{ project.end_date }}");
-                    const now = new Date();
-                    const diff = endDate - now;
-                    
-                    let timerText = '';
-                    let cssClass = '';
-                    
-                    if (diff > 0) {
-                        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-                        
-                        timerText = `${days}d ${hours}h ${minutes}m ${seconds}s`;
-                        cssClass = days < 7 ? 'text-warning' : 'text-success';
-                    } else {
-                        timerText = 'Deadline passed';
-                        cssClass = 'text-danger';
-                    }
-                    
-                    const timerElement = document.getElementById('timer-text');
-                    timerElement.textContent = timerText;
-                    timerElement.className = `display-4 mb-2 fw-bold ${cssClass}`;
-                }
-                
-                updateTimer();
-                setInterval(updateTimer, 1000);
-            </script>
-        </div>
-        {% endif %}
-        
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title mb-0">Task Summary</h5>

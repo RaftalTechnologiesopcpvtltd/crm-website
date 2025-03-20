@@ -46,23 +46,22 @@ class ProjectForm(FlaskForm):
     submit = SubmitField('Save Project')
 
 class TaskForm(FlaskForm):
-    title = StringField('Title', validators=[DataRequired(), Length(max=100)])
+    user_id = SelectField('Assign To', validators=[Optional()], coerce=int)
+    title = StringField('Task Title', validators=[DataRequired(), Length(max=100)])
     description = TextAreaField('Description', validators=[Optional()])
     due_date = DateField('Due Date', validators=[Optional()])
     priority = SelectField('Priority', 
-                       choices=[('low', 'Low'), 
-                               ('medium', 'Medium'), 
-                               ('high', 'High'), 
-                               ('urgent', 'Urgent')],
-                       default='medium')
+                         choices=[('low', 'Low'), 
+                                 ('medium', 'Medium'), 
+                                 ('high', 'High'),
+                                 ('urgent', 'Urgent')],
+                         default='medium')
     status = SelectField('Status', 
                        choices=[('to-do', 'To Do'), 
                                ('in-progress', 'In Progress'), 
-                               ('in-review', 'In Review'), 
+                               ('in-review', 'In Review'),
                                ('completed', 'Completed')],
                        default='to-do')
-    milestone_id = SelectField('Milestone', coerce=int, validators=[Optional()])
-    user_id = SelectField('Assign To', coerce=int, validators=[Optional()])
     submit = SubmitField('Save Task')
 
 class ProjectMilestoneForm(FlaskForm):
@@ -82,15 +81,15 @@ class AccountForm(FlaskForm):
     account_type = SelectField('Account Type', 
                              choices=[('bank', 'Bank Account'), 
                                     ('paypal', 'PayPal'), 
-                                    ('stripe', 'Stripe'), 
+                                    ('stripe', 'Stripe'),
                                     ('other', 'Other')],
                              default='bank')
     currency = SelectField('Currency', 
                          choices=[('USD', 'USD'), 
                                  ('EUR', 'EUR'), 
-                                 ('GBP', 'GBP'), 
-                                 ('INR', 'INR'), 
-                                 ('AUD', 'AUD'), 
+                                 ('GBP', 'GBP'),
+                                 ('INR', 'INR'),
+                                 ('AUD', 'AUD'),
                                  ('CAD', 'CAD')],
                          default='USD')
     description = TextAreaField('Description', validators=[Optional()])
@@ -104,9 +103,9 @@ class ProjectPaymentForm(FlaskForm):
     currency_original = SelectField('Original Currency', 
                                  choices=[('USD', 'USD'), 
                                          ('EUR', 'EUR'), 
-                                         ('GBP', 'GBP'), 
-                                         ('INR', 'INR'), 
-                                         ('AUD', 'AUD'), 
+                                         ('GBP', 'GBP'),
+                                         ('INR', 'INR'),
+                                         ('AUD', 'AUD'),
                                          ('CAD', 'CAD')],
                                  default='USD')
     platform_fee = DecimalField('Platform Fee', validators=[Optional(), NumberRange(min=0)], places=2, default=Decimal('0.00'))
@@ -116,17 +115,17 @@ class ProjectPaymentForm(FlaskForm):
     currency_received = SelectField('Received Currency', 
                                   choices=[('USD', 'USD'), 
                                           ('EUR', 'EUR'), 
-                                          ('GBP', 'GBP'), 
-                                          ('INR', 'INR'), 
-                                          ('AUD', 'AUD'), 
+                                          ('GBP', 'GBP'),
+                                          ('INR', 'INR'),
+                                          ('AUD', 'AUD'),
                                           ('CAD', 'CAD')],
                                   default='USD')
     payment_date = DateField('Payment Date', validators=[Optional()])
     status = SelectField('Status', 
                        choices=[('pending', 'Pending'), 
                                ('in-review', 'In Review'), 
-                               ('in-platform', 'In Platform'), 
-                               ('transferred', 'Transferred'), 
+                               ('in-platform', 'In Platform'),
+                               ('transferred', 'Transferred'),
                                ('reconciled', 'Reconciled')],
                        default='pending')
     notes = TextAreaField('Notes', validators=[Optional()])
