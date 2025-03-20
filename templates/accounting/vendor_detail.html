@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Vendor: {{ vendor.name }} - Employee Management System{% endblock %}
+
+{% block header %}
+Vendor: {{ vendor.name }} <small class="text-muted">{{ vendor.vendor_number }}</small>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <a href="{{ url_for('accounting.vendors') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back to Vendors
+        </a>
+    </div>
+    <div class="col-md-6 text-end">
+        <div class="btn-group">
+            <a href="{{ url_for('accounting.edit_vendor', id=vendor.id) }}" class="btn btn-primary">
+                <i class="fas fa-edit me-1"></i> Edit
+            </a>
+            <a href="{{ url_for('accounting.vendor_invoices', vendor_id=vendor.id) }}" class="btn btn-info">
+                <i class="fas fa-file-invoice-dollar me-1"></i> Invoices
+            </a>
+            <a href="{{ url_for('accounting.new_vendor_invoice', vendor_id=vendor.id) }}" class="btn btn-success">
+                <i class="fas fa-plus me-1"></i> New Invoice
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Vendor Information</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Name:</dt>
+                    <dd class="col-sm-8">{{ vendor.name }}</dd>
+                    
+                    <dt class="col-sm-4">Vendor Number:</dt>
+                    <dd class="col-sm-8">{{ vendor.vendor_number }}</dd>
+                    
+                    <dt class="col-sm-4">Contact Name:</dt>
+                    <dd class="col-sm-8">{{ vendor.contact_name or 'N/A' }}</dd>
+                    
+                    <dt class="col-sm-4">Email:</dt>
+                    <dd class="col-sm-8">{{ vendor.email or 'N/A' }}</dd>
+                    
+                    <dt class="col-sm-4">Phone:</dt>
+                    <dd class="col-sm-8">{{ vendor.phone or 'N/A' }}</dd>
+                    
+                    <dt class="col-sm-4">Address:</dt>
+                    <dd class="col-sm-8">{{ vendor.address or 'N/A' }}</dd>
+                    
+                    <dt class="col-sm-4">Payment Terms:</dt>
+                    <dd class="col-sm-8">{{ vendor.payment_terms }}</dd>
+                    
+                    <dt class="col-sm-4">AP Account:</dt>
+                    <dd class="col-sm-8">{{ vendor.account.code }} - {{ vendor.account.name }}</dd>
+                    
+                    <dt class="col-sm-4">Status:</dt>
+                    <dd class="col-sm-8">
+                        {% if vendor.is_active %}
+                        <span class="badge bg-success">Active</span>
+                        {% else %}
+                        <span class="badge bg-danger">Inactive</span>
+                        {% endif %}
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Financial Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body py-2 text-center">
+                                <h6 class="card-subtitle text-muted mb-1">Open Invoices</h6>
+                                <h3 class="mb-0">{{ open_invoices_count }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body py-2 text-center">
+                                <h6 class="card-subtitle text-muted mb-1">Total Unpaid</h6>
+                                <h3 class="mb-0">{{ unpaid_amount|format_currency }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body py-2 text-center">
+                                <h6 class="card-subtitle text-muted mb-1">YTD Payments</h6>
+                                <h3 class="mb-0">{{ ytd_payments|format_currency }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body py-2 text-center">
+                                <h6 class="card-subtitle text-muted mb-1">All-Time Total</h6>
+                                <h3 class="mb-0">{{ total_amount|format_currency }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Recent Invoices</h5>
+        <a href="{{ url_for('accounting.vendor_invoices', vendor_id=vendor.id) }}" class="btn btn-sm btn-primary">
+            View All
+        </a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Invoice #</th>
+                        <th>Date</th>
+                        <th>Due Date</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for invoice in recent_invoices %}
+                    <tr>
+                        <td>{{ invoice.invoice_number }}</td>
+                        <td>{{ invoice.date|format_date }}</td>
+                        <td>{{ invoice.due_date|format_date }}</td>
+                        <td>{{ invoice.total_amount|format_currency }}</td>
+                        <td>
+                            {% if invoice.status == 'PENDING' %}
+                            <span class="badge bg-warning">Pending</span>
+                            {% elif invoice.status == 'APPROVED' %}
+                            <span class="badge bg-info">Approved</span>
+                            {% elif invoice.status == 'PAID' %}
+                            <span class="badge bg-success">Paid</span>
+                            {% elif invoice.status == 'VOIDED' %}
+                            <span class="badge bg-danger">Voided</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('accounting.vendor_invoice_detail', id=invoice.id) }}" class="btn btn-info" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ url_for('accounting.edit_vendor_invoice', id=invoice.id) }}" class="btn btn-primary" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% if invoice.status != 'PAID' %}
+                                <a href="{{ url_for('accounting.new_vendor_payment', invoice_id=invoice.id) }}" class="btn btn-success" title="Pay">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-3">No recent invoices found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

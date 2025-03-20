@@ -1,0 +1,89 @@
+Create a detailed Accounting Section for an ERP system that includes all accounting processes. Break it down process by process and page by page. For each page, describe:
+
+Purpose of the page – What it is used for and who will use it.
+
+Functional details – How the accounting calculations work on that page.
+
+User interactions – What inputs are required and what outputs are generated.
+
+Navigation flow – How users move between pages in the accounting module.
+
+Key Features to Cover:
+1. Chart of Accounts:
+Create, view, and manage different account types (Assets, Liabilities, Equity, Revenue, Expenses).
+
+Structure of accounts: Parent-child relationships.
+
+2. General Ledger:
+View all financial transactions.
+
+Filtering by date, account, or transaction type.
+
+Debit and credit calculations.
+
+3. Journal Entries:
+Add manual journal entries with debit-credit validation.
+
+Auto-generated entries from sales, purchases, payments, and receipts.
+
+4. Purchase Management:
+Adding purchase invoices.
+
+Handling purchase returns and adjustments.
+
+Supplier payments and outstanding dues.
+
+5. Sales Management:
+Recording sales invoices.
+
+Managing customer payments and credit notes.
+
+Sales returns and refunds processing.
+
+6. Accounts Payable & Receivable:
+Managing due payments for vendors and customers.
+
+Aging reports for overdue invoices.
+
+7. Bank Reconciliation:
+Adding bank accounts with opening balances.
+
+Reconciling bank statements with recorded transactions.
+
+Handling bank charges, interest, and other adjustments.
+
+8. Tax Calculation & Reports:
+Configuring different tax types (GST, VAT, etc.).
+
+Automated tax calculations on purchases and sales.
+
+Generating tax reports for compliance.
+
+9. Financial Statements:
+Balance Sheet – Assets vs. Liabilities & Equity.
+
+Profit & Loss Statement – Revenue vs. Expenses.
+
+Cash Flow Statement – Inflows & outflows analysis.
+
+10. Ledger Reports:
+Account-wise transaction history.
+
+Trial balance report.
+
+Exporting reports in PDF/CSV.
+
+11. Payroll Accounting:
+Managing employee salaries, deductions, and tax calculations.
+
+Salary payment processing.
+
+12. Multi-Currency Support:
+Handling transactions in multiple currencies.
+
+Currency conversion and exchange rate adjustments.
+
+13. Closing Fiscal Year:
+Year-end adjustments and financial closing process.
+
+Ensure that the AI generates all pages systematically with detailed explanations of calculations, workflows, and dependencies between different sections. The focus should be on making accounting clear, automated, and efficient for users.
