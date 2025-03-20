@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 import random
+from sqlalchemy import func
 from app import db
 from models_accounting import ChartOfAccount, FiscalYear, AccountingPeriod, JournalEntry, JournalEntryLine
 from models_accounting import Currency, ExchangeRate, Tax, Vendor, VendorInvoice, VendorPayment
@@ -1104,3 +1105,183 @@ def trial_balance():
         total_debits=total_debits,
         total_credits=total_credits
     )
+    
+# Vendor Management
+@accounting_bp.route('/vendors')
+@login_required
+def vendors():
+    """List all vendors"""
+    check_admin()
+    page = request.args.get('page', 1, type=int)
+    search = request.args.get('search', '')
+    
+    query = Vendor.query
+    
+    if search:
+        query = query.filter(Vendor.name.ilike(f'%{search}%') | 
+                            Vendor.vendor_number.ilike(f'%{search}%') |
+                            Vendor.contact_name.ilike(f'%{search}%'))
+    
+    pagination = query.order_by(Vendor.name).paginate(page=page, per_page=10, error_out=False)
+    vendors = pagination.items
+    
+    return render_template('accounting/vendors.html', 
+                         vendors=vendors, 
+                         pagination=pagination,
+                         title='Vendors')
+
+@accounting_bp.route('/vendors/new', methods=['GET', 'POST'])
+@login_required
+def new_vendor():
+    """Create a new vendor"""
+    check_admin()
+    form = VendorForm()
+    
+    # Get accounts payable accounts for dropdown
+    ap_accounts = ChartOfAccount.query.filter_by(
+        account_type=AccountType.LIABILITY.value,
+        is_active=True
+    ).filter(ChartOfAccount.code.like('2%')).all()
+    
+    form.account_id.choices = [(a.id, f"{a.code} - {a.name}") for a in ap_accounts]
+    
+    if form.validate_on_submit():
+        vendor = Vendor(
+            name=form.name.data,
+            vendor_number=form.vendor_number.data,
+            contact_name=form.contact_name.data,
+            email=form.email.data,
+            phone=form.phone.data,
+            address=form.address.data,
+            payment_terms=form.payment_terms.data,
+            account_id=form.account_id.data,
+            is_active=form.is_active.data
+        )
+        
+        db.session.add(vendor)
+        try:
+            db.session.commit()
+            flash(f'Vendor {vendor.name} has been created successfully.', 'success')
+            return redirect(url_for('accounting.vendors'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error creating vendor: {str(e)}', 'danger')
+    
+    return render_template('accounting/vendor_form.html',
+                         form=form,
+                         vendor=None,
+                         title='Add Vendor')
+
+@accounting_bp.route('/vendors/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_vendor(id):
+    """Edit a vendor"""
+    check_admin()
+    vendor = Vendor.query.get_or_404(id)
+    form = VendorForm(obj=vendor)
+    
+    # Get accounts payable accounts for dropdown
+    ap_accounts = ChartOfAccount.query.filter_by(
+        account_type=AccountType.LIABILITY.value,
+        is_active=True
+    ).filter(ChartOfAccount.code.like('2%')).all()
+    
+    form.account_id.choices = [(a.id, f"{a.code} - {a.name}") for a in ap_accounts]
+    
+    if form.validate_on_submit():
+        vendor.name = form.name.data
+        vendor.vendor_number = form.vendor_number.data
+        vendor.contact_name = form.contact_name.data
+        vendor.email = form.email.data
+        vendor.phone = form.phone.data
+        vendor.address = form.address.data
+        vendor.payment_terms = form.payment_terms.data
+        vendor.account_id = form.account_id.data
+        vendor.is_active = form.is_active.data
+        
+        try:
+            db.session.commit()
+            flash(f'Vendor {vendor.name} has been updated successfully.', 'success')
+            return redirect(url_for('accounting.vendors'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating vendor: {str(e)}', 'danger')
+    
+    return render_template('accounting/vendor_form.html',
+                         form=form,
+                         vendor=vendor,
+                         title='Edit Vendor')
+
+@accounting_bp.route('/vendors/<int:id>', methods=['GET'])
+@login_required
+def vendor_detail(id):
+    """View vendor details"""
+    check_admin()
+    vendor = Vendor.query.get_or_404(id)
+    
+    # Get recent invoices
+    recent_invoices = VendorInvoice.query.filter_by(vendor_id=id).order_by(VendorInvoice.date.desc()).limit(5).all()
+    
+    # Calculate vendor statistics
+    open_invoices_count = VendorInvoice.query.filter_by(
+        vendor_id=id, 
+        status='PENDING'
+    ).count()
+    
+    # Get unpaid amount
+    unpaid_amount = db.session.query(
+        func.sum(VendorInvoice.total_amount)
+    ).filter(
+        VendorInvoice.vendor_id == id,
+        VendorInvoice.status.in_(['PENDING', 'APPROVED'])
+    ).scalar() or Decimal('0.00')
+    
+    # Get year-to-date payments
+    ytd_start = date(date.today().year, 1, 1)
+    ytd_payments = db.session.query(
+        func.sum(VendorPayment.amount)
+    ).join(
+        VendorInvoice
+    ).filter(
+        VendorInvoice.vendor_id == id,
+        VendorPayment.payment_date >= ytd_start
+    ).scalar() or Decimal('0.00')
+    
+    # Get total payments all-time
+    total_amount = db.session.query(
+        func.sum(VendorInvoice.total_amount)
+    ).filter(
+        VendorInvoice.vendor_id == id
+    ).scalar() or Decimal('0.00')
+    
+    return render_template('accounting/vendor_detail.html',
+                         vendor=vendor,
+                         recent_invoices=recent_invoices,
+                         open_invoices_count=open_invoices_count,
+                         unpaid_amount=unpaid_amount,
+                         ytd_payments=ytd_payments,
+                         total_amount=total_amount,
+                         title=f'Vendor: {vendor.name}')
+
+@accounting_bp.route('/vendors/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_vendor(id):
+    """Delete a vendor"""
+    check_admin()
+    vendor = Vendor.query.get_or_404(id)
+    
+    # Check if vendor has invoices
+    invoices = VendorInvoice.query.filter_by(vendor_id=id).count()
+    if invoices > 0:
+        flash(f'Cannot delete vendor {vendor.name} because it has {invoices} invoices associated with it. Mark the vendor as inactive instead.', 'danger')
+        return redirect(url_for('accounting.vendors'))
+    
+    try:
+        db.session.delete(vendor)
+        db.session.commit()
+        flash(f'Vendor {vendor.name} has been deleted successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting vendor: {str(e)}', 'danger')
+    
+    return redirect(url_for('accounting.vendors'))

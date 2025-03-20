@@ -1,145 +1,168 @@
 {% extends "base.html" %}
 
-{% block title %}{{ title }} - Employee Management System{% endblock %}
-
-{% block header %}{{ title }}{% endblock %}
+{% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-lg-8 col-md-10 col-sm-12 mx-auto">
-        <div class="card">
-            <div class="card-body">
-                <form method="POST" action="{{ url_for('accounting.edit_vendor', id=vendor.id) if vendor else url_for('accounting.new_vendor') }}">
-                    {{ form.hidden_tag() }}
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="name" class="form-label">Vendor Name*</label>
-                            {{ form.name(class="form-control", id="name") }}
-                            {% if form.name.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.name.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">{{ title }}</h6>
+            <a href="{{ url_for('accounting.vendors') }}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left"></i> Back to Vendors
+            </a>
+        </div>
+        <div class="card-body">
+            <form method="POST" class="needs-validation" novalidate>
+                {{ form.csrf_token }}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.vendor_number.label(class="form-control-label") }}
+                            {% if vendor %}
+                                {{ form.vendor_number(class="form-control", readonly=true) }}
+                            {% else %}
+                                {{ form.vendor_number(class="form-control") }}
                             {% endif %}
-                        </div>
-                        <div class="col-md-6">
-                            <label for="vendor_number" class="form-label">Vendor Number*</label>
-                            {{ form.vendor_number(class="form-control", id="vendor_number") }}
                             {% if form.vendor_number.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.vendor_number.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.vendor_number.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
                             {% endif %}
-                            <div class="form-text">Unique identifier for this vendor</div>
+                            <small class="form-text text-muted">Unique identifier for this vendor</small>
                         </div>
                     </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="contact_name" class="form-label">Contact Name</label>
-                            {{ form.contact_name(class="form-control", id="contact_name") }}
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.name.label(class="form-control-label") }}
+                            {{ form.name(class="form-control") }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.contact_name.label(class="form-control-label") }}
+                            {{ form.contact_name(class="form-control") }}
                             {% if form.contact_name.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.contact_name.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.contact_name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
                             {% endif %}
                         </div>
-                        <div class="col-md-6">
-                            <label for="email" class="form-label">Email</label>
-                            {{ form.email(class="form-control", id="email", type="email") }}
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.email.label(class="form-control-label") }}
+                            {{ form.email(class="form-control", type="email") }}
                             {% if form.email.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.email.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.email.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
                             {% endif %}
                         </div>
                     </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="phone" class="form-label">Phone</label>
-                            {{ form.phone(class="form-control", id="phone") }}
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.phone.label(class="form-control-label") }}
+                            {{ form.phone(class="form-control") }}
                             {% if form.phone.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.phone.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.phone.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
                             {% endif %}
                         </div>
-                        <div class="col-md-6">
-                            <label for="payment_terms" class="form-label">Payment Terms</label>
-                            {{ form.payment_terms(class="form-select", id="payment_terms") }}
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.payment_terms.label(class="form-control-label") }}
+                            {{ form.payment_terms(class="form-control") }}
                             {% if form.payment_terms.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.payment_terms.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.payment_terms.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
                             {% endif %}
+                            <small class="form-text text-muted">Standard payment terms for this vendor</small>
                         </div>
                     </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-12">
-                            <label for="address" class="form-label">Address</label>
-                            {{ form.address(class="form-control", id="address", rows=3) }}
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            {{ form.address.label(class="form-control-label") }}
+                            {{ form.address(class="form-control", rows=3) }}
                             {% if form.address.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.address.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.address.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
                             {% endif %}
                         </div>
                     </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="account_id" class="form-label">AP Account*</label>
-                            {{ form.account_id(class="form-select", id="account_id") }}
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.account_id.label(class="form-control-label") }}
+                            {{ form.account_id(class="form-control") }}
                             {% if form.account_id.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.account_id.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.account_id.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
                             {% endif %}
-                            <div class="form-text">The accounts payable account to be used for this vendor</div>
+                            <small class="form-text text-muted">The accounts payable account to use for this vendor</small>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-check mt-4">
-                                {{ form.is_active(class="form-check-input", id="is_active") }}
-                                <label class="form-check-label" for="is_active">Active</label>
-                                {% if form.is_active.errors %}
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mt-4">
+                            <div class="custom-control custom-switch">
+                                {{ form.is_active(class="custom-control-input") }}
+                                {{ form.is_active.label(class="custom-control-label") }}
+                            </div>
+                            {% if form.is_active.errors %}
                                 <div class="invalid-feedback d-block">
                                     {% for error in form.is_active.errors %}
                                         {{ error }}
                                     {% endfor %}
                                 </div>
-                                {% endif %}
-                            </div>
+                            {% endif %}
                         </div>
                     </div>
-                    
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <a href="{{ url_for('accounting.vendors') }}" class="btn btn-secondary me-md-2">
-                            Cancel
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-1"></i> {{ form.submit.label.text }}
-                        </button>
-                    </div>
-                </form>
-            </div>
+                </div>
+                
+                <div class="form-group mt-4 text-center">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {{ 'Update Vendor' if vendor else 'Save Vendor' }}
+                    </button>
+                    <a href="{{ url_for('accounting.vendors') }}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
         </div>
     </div>
 </div>
