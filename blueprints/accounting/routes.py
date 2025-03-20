@@ -2,6 +2,7 @@ from flask import render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from datetime import datetime, date
 from decimal import Decimal
+import random
 from app import db
 from models_accounting import ChartOfAccount, FiscalYear, AccountingPeriod, JournalEntry, JournalEntryLine
 from models_accounting import Currency, ExchangeRate, Tax, Vendor, VendorInvoice, VendorPayment
@@ -12,6 +13,78 @@ from . import accounting_bp
 from .forms import ChartOfAccountForm, FiscalYearForm, AccountingPeriodForm, JournalEntryForm, JournalEntryLineForm
 from .forms import CurrencyForm, ExchangeRateForm, TaxForm, VendorForm, VendorInvoiceForm, VendorPaymentForm
 from .forms import CustomerForm, CustomerInvoiceForm, CustomerPaymentForm, BankAccountForm, BankReconciliationForm, BankTransactionForm
+
+# Utility function for automatic journal entry creation
+def create_journal_entry(entry_type, transaction_date, reference, memo, line_items, user_id=None):
+    """
+    Create a journal entry automatically for business transactions
+    
+    Args:
+        entry_type: Type of entry (INVOICE, PAYMENT, etc.)
+        transaction_date: Date of the transaction
+        reference: Reference number/ID
+        memo: Description of the transaction
+        line_items: List of dictionaries with account_id, debit_amount, credit_amount, description
+        user_id: User ID who created the transaction (defaults to current_user.id)
+    
+    Returns:
+        Created JournalEntry object or None if error
+    """
+    try:
+        # Get the current accounting period
+        current_period = AccountingPeriod.query.filter(
+            AccountingPeriod.start_date <= transaction_date,
+            AccountingPeriod.end_date >= transaction_date,
+            AccountingPeriod.is_closed == False
+        ).first()
+        
+        if not current_period:
+            # Fallback to the most recent period if no matching period found
+            current_period = AccountingPeriod.query.filter(
+                AccountingPeriod.is_closed == False
+            ).order_by(AccountingPeriod.end_date.desc()).first()
+            
+        if not current_period:
+            return None  # No available accounting period
+        
+        # Generate a unique entry number
+        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+        random_suffix = ''.join(random.choices('0123456789', k=4))
+        entry_number = f"JE-{transaction_date.strftime('%Y%m')}-{entry_type[:2]}-{random_suffix}"
+        
+        # Create journal entry
+        journal_entry = JournalEntry(
+            entry_number=entry_number,
+            date=transaction_date,
+            period_id=current_period.id,
+            memo=memo,
+            reference=reference,
+            status='POSTED',  # Auto-created entries are posted automatically
+            entry_type='SYSTEM',  # System-generated entries
+            created_by=user_id if user_id else current_user.id
+        )
+        
+        db.session.add(journal_entry)
+        db.session.flush()  # Get the ID without committing
+        
+        # Add line items
+        for item in line_items:
+            line = JournalEntryLine(
+                journal_entry_id=journal_entry.id,
+                account_id=item['account_id'],
+                description=item.get('description', ''),
+                debit_amount=item.get('debit_amount', 0),
+                credit_amount=item.get('credit_amount', 0)
+            )
+            db.session.add(line)
+        
+        db.session.commit()
+        return journal_entry
+    
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error creating journal entry: {str(e)}")
+        return None
 
 # Initialize default accounting data
 def initialize_accounting():
