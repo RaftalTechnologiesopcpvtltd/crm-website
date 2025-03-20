@@ -85,9 +85,9 @@ def create_app():
         return ""
     
     @app.template_filter('time_remaining')
-    def time_remaining_filter(due_date):
+    def time_remaining_filter(due_date, start_date=None):
         from utils import get_time_remaining
-        return get_time_remaining(due_date)
+        return get_time_remaining(due_date, start_date)
         
     @app.template_filter('format_currency')
     def format_currency_filter(value):

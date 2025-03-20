@@ -403,10 +403,13 @@
                                         <td>{{ task.due_date | formatdate if task.due_date else 'Not set' }}</td>
                                         <td>
                                             {% if task.due_date %}
-                                                {% set time_info = task.due_date | time_remaining %}
+                                                {% set time_info = task.due_date | time_remaining(project.start_date) %}
                                                 <span class="{{ time_info.css_class }} fw-bold small">
                                                     <i class="fas fa-clock me-1"></i>
                                                     {{ time_info.time_str }}
+                                                    {% if time_info.percent_complete is defined %}
+                                                    <span class="badge rounded-pill bg-secondary ms-1" title="Timeline progress">{{ time_info.percent_complete }}%</span>
+                                                    {% endif %}
                                                 </span>
                                             {% else %}
                                                 <span class="text-muted">No deadline</span>
@@ -616,10 +619,13 @@
                         <h6 class="fw-bold">Due Date</h6>
                         <p>{{ task.due_date | formatdate if task.due_date else 'Not set' }}</p>
                         {% if task.due_date %}
-                        {% set time_info = task.due_date | time_remaining %}
+                        {% set time_info = task.due_date | time_remaining(project.start_date) %}
                         <p class="{{ time_info.css_class }} fw-bold">
                             <i class="fas fa-clock me-1"></i>
                             {{ time_info.time_str }}
+                            {% if time_info.percent_complete is defined %}
+                            <br><small class="text-secondary">Timeline progress: {{ time_info.percent_complete }}%</small>
+                            {% endif %}
                         </p>
                         {% endif %}
                     </div>
