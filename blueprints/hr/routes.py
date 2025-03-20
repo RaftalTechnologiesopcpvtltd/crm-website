@@ -144,16 +144,18 @@ def employee_report():
 
 @hr_bp.route('/leaves')
 def leaves():
-    if current_user.is_admin:
+    # If user is admin or in HR department, show all leaves
+    if current_user.is_admin or current_user.department == 'hr':
         leaves = Leave.query.order_by(Leave.start_date.desc()).all()
+        return render_template('hr/leaves.html', leaves=leaves, show_all=True)
     else:
+        # Regular employees can only see their own leave requests
         employee = Employee.query.filter_by(user_id=current_user.id).first()
         if not employee:
             flash('You are not registered as an employee.', 'warning')
             return redirect(url_for('project_management.dashboard'))
         leaves = Leave.query.filter_by(employee_id=employee.id).order_by(Leave.start_date.desc()).all()
-    
-    return render_template('hr/leaves.html', leaves=leaves)
+        return render_template('hr/leaves.html', leaves=leaves, show_all=False)
 
 @hr_bp.route('/leaves/new', methods=['GET', 'POST'])
 def new_leave():
