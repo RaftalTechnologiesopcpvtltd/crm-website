@@ -69,12 +69,16 @@ class JournalEntryLineForm(FlaskForm):
         if not super(JournalEntryLineForm, self).validate(**kwargs):
             return False
         
-        if self.debit_amount.data == 0 and self.credit_amount.data == 0:
+        # Convert None values to 0
+        debit_val = 0 if self.debit_amount.data is None else self.debit_amount.data
+        credit_val = 0 if self.credit_amount.data is None else self.credit_amount.data
+        
+        if debit_val == 0 and credit_val == 0:
             self.debit_amount.errors = list(self.debit_amount.errors) if self.debit_amount.errors else []
             self.debit_amount.errors.append('Either debit or credit amount must be greater than zero')
             return False
         
-        if self.debit_amount.data > 0 and self.credit_amount.data > 0:
+        if debit_val > 0 and credit_val > 0:
             self.credit_amount.errors = list(self.credit_amount.errors) if self.credit_amount.errors else []
             self.credit_amount.errors.append('An entry cannot have both debit and credit amounts')
             return False
