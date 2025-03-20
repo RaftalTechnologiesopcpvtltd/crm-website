@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">{{ title }}</h1>
+        <a href="{{ url_for('hr.payroll') }}" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to Payroll
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Calculate Payroll Based on Attendance</h6>
+        </div>
+        <div class="card-body">
+            <p class="mb-4">
+                Use this form to calculate a payroll record based on employee attendance. 
+                When "Calculate Based on Attendance" is checked, the system will adjust the salary 
+                based on present/absent days in the selected period.
+            </p>
+
+            <form method="post">
+                {{ form.hidden_tag() }}
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.employee_id.label(class="form-control-label") }}
+                            {% if form.employee_id.errors %}
+                                {{ form.employee_id(class="form-control is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.employee_id.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.employee_id(class="form-control") }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="form-check mt-4">
+                                {{ form.attendance_based(class="form-check-input") }}
+                                {{ form.attendance_based.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.pay_period_start.label(class="form-control-label") }}
+                            {% if form.pay_period_start.errors %}
+                                {{ form.pay_period_start(class="form-control is-invalid", type="date") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.pay_period_start.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.pay_period_start(class="form-control", type="date") }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.pay_period_end.label(class="form-control-label") }}
+                            {% if form.pay_period_end.errors %}
+                                {{ form.pay_period_end(class="form-control is-invalid", type="date") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.pay_period_end.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.pay_period_end(class="form-control", type="date") }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            {{ form.bonus.label(class="form-control-label") }}
+                            {% if form.bonus.errors %}
+                                {{ form.bonus(class="form-control is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.bonus.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.bonus(class="form-control") }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            {{ form.deductions.label(class="form-control-label") }}
+                            {% if form.deductions.errors %}
+                                {{ form.deductions(class="form-control is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.deductions.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.deductions(class="form-control") }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            {{ form.payment_date.label(class="form-control-label") }}
+                            {% if form.payment_date.errors %}
+                                {{ form.payment_date(class="form-control is-invalid", type="date") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.payment_date.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.payment_date(class="form-control", type="date") }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group mt-3">
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

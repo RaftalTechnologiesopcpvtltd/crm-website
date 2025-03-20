@@ -169,8 +169,9 @@ def new_leave():
     if current_user.is_admin:
         form.employee_id.choices = [(e.id, e.full_name) for e in Employee.query.all()]
     else:
+        # For non-admin users, only allow them to select their own employee record
+        form.employee_id.choices = [(employee.id, employee.full_name)]
         form.employee_id.data = employee.id
-        form.employee_id.render_kw = {'readonly': True}
     
     if form.validate_on_submit():
         leave = Leave(

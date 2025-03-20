@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">{{ title }}</h1>
+        <div>
+            <a href="{{ url_for('hr.attendance_report') }}" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+                <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to Report Form
+            </a>
+            <a href="#" onclick="window.print()" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+                <i class="fas fa-print fa-sm text-white-50"></i> Print Report
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Attendance Report for Period: {{ start_date.strftime('%Y-%m-%d') }} to {{ end_date.strftime('%Y-%m-%d') }}</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Department</th>
+                            <th>Present Days</th>
+                            <th>Absent Days</th>
+                            <th>Late Days</th>
+                            <th>Total Hours</th>
+                            <th>Attendance %</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for data in attendance_data %}
+                        <tr>
+                            <td>{{ data.employee.full_name }}</td>
+                            <td>{{ data.employee.department }}</td>
+                            <td>{{ data.summary.present_days }}</td>
+                            <td>{{ data.summary.absent_days }}</td>
+                            <td>{{ data.summary.late_days }}</td>
+                            <td>{{ data.summary.total_hours }}</td>
+                            <td>
+                                {% if data.summary.total_days > 0 %}
+                                {% set attendance_percent = (data.summary.present_days / data.summary.total_days) * 100 %}
+                                {{ attendance_percent|round|int }}%
+                                <div class="progress progress-sm">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ attendance_percent }}%" 
+                                        aria-valuenow="{{ attendance_percent|round|int }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                {% else %}
+                                N/A
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('hr.attendance_report', employee_id=data.employee.id, start_date=start_date.strftime('%Y-%m-%d'), end_date=end_date.strftime('%Y-%m-%d')) }}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i> Details
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        $('#dataTable').DataTable({
+            "paging": false,
+            "ordering": true,
+            "info": false,
+            "searching": false
+        });
+    });
+</script>
+{% endblock %}

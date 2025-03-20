@@ -100,7 +100,7 @@
                                 <span class="badge badge-info">Half-Day</span>
                                 {% endif %}
                             </td>
-                            <td>{{ record.total_hours() if record.check_in_time and record.check_out_time else 'N/A' }}</td>
+                            <td>{{ record.total_hours if record.check_in_time and record.check_out_time else 'N/A' }}</td>
                             <td>{{ record.remarks or 'No remarks' }}</td>
                             <td>
                                 {% if current_user.is_admin or current_user.department == 'hr' %}
