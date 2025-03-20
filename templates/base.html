@@ -94,6 +94,35 @@
                                             Journal Entries
                                         </a>
                                     </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-bs-toggle="collapse" href="#financialStatementsSubmenu" role="button" aria-expanded="false" aria-controls="financialStatementsSubmenu">
+                                            <i class="fas fa-file-invoice-dollar me-2"></i>
+                                            Financial Statements
+                                            <i class="fas fa-caret-down float-end mt-1"></i>
+                                        </a>
+                                        <div class="collapse {% if 'accounting.balance_sheet' == request.endpoint or 'accounting.income_statement' == request.endpoint or 'accounting.trial_balance' == request.endpoint %}show{% endif %}" id="financialStatementsSubmenu">
+                                            <ul class="nav flex-column ps-3">
+                                                <li class="nav-item">
+                                                    <a class="nav-link {% if 'accounting.balance_sheet' == request.endpoint %}active{% endif %}" href="{{ url_for('accounting.balance_sheet') }}">
+                                                        <i class="fas fa-balance-scale me-2"></i>
+                                                        Balance Sheet
+                                                    </a>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <a class="nav-link {% if 'accounting.income_statement' == request.endpoint %}active{% endif %}" href="{{ url_for('accounting.income_statement') }}">
+                                                        <i class="fas fa-chart-line me-2"></i>
+                                                        Income Statement
+                                                    </a>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <a class="nav-link {% if 'accounting.trial_balance' == request.endpoint %}active{% endif %}" href="{{ url_for('accounting.trial_balance') }}">
+                                                        <i class="fas fa-columns me-2"></i>
+                                                        Trial Balance
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </li>
                                 </ul>
                             </div>
                         </li>
