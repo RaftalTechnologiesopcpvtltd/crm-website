@@ -1,5 +1,6 @@
 
 function updateTimer() {
+    console.log("Timer update triggered");
     const timerElements = document.querySelectorAll('.time-blocks[data-deadline]');
     
     timerElements.forEach(element => {
@@ -7,9 +8,12 @@ function updateTimer() {
         const startDateStr = element.dataset.startDate;
         if (!deadlineStr) return;
         
-        const deadline = new Date(deadlineStr);
+        console.log("Found timer with deadline:", deadlineStr, "and start date:", startDateStr);
+        
+        // Parse the date strings (add time if not present)
+        const deadline = new Date(deadlineStr + (deadlineStr.includes('T') ? '' : 'T23:59:59'));
         const now = new Date();
-        const startDate = startDateStr ? new Date(startDateStr) : null;
+        const startDate = startDateStr ? new Date(startDateStr + (startDateStr.includes('T') ? '' : 'T00:00:00')) : null;
         let diff = deadline.getTime() - now.getTime();
         
         // Handle overdue projects

@@ -4,9 +4,9 @@
 .sidebar {
     min-height: 100vh;
     box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
-    background: linear-gradient(180deg, #2c3e50, #4ca1af);
-    background-size: 100% 200%;
-    animation: sidebar-gradient-shift 15s ease infinite;
+    background: linear-gradient(135deg, #6b17e6, #5e02ff, #bb00ff);
+    background-size: 200% 200%;
+    animation: gradient-shift 15s ease infinite;
 }
 
 .sidebar-heading {
@@ -533,18 +533,29 @@ body {
 
 /* Card backgrounds */
 .main-content .card {
-    background: rgba(255, 255, 255, 0.8);
+    background: linear-gradient(135deg, #6b17e6, #5e02ff, #bb00ff);
+    background-size: 200% 200%;
+    animation: gradient-shift 15s ease infinite;
     backdrop-filter: blur(10px);
     border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.18);
+    color: white;
 }
 
 .main-content .card-header {
     background: transparent;
     border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-    color: #3a3a3a;
+    color: white;
     font-weight: 600;
+}
+
+.card-title {
+    color: white;
+}
+
+.text-muted {
+    color: rgba(255, 255, 255, 0.8) !important;
 }
 
 /* Timer styles */
@@ -595,9 +606,12 @@ body {
 /* Department Dashboard Widgets */
 .widget-card {
     display: flex;
-    background-color: #fff;
+    background: linear-gradient(135deg, #6b17e6, #5e02ff, #bb00ff);
+    background-size: 200% 200%;
+    animation: gradient-shift 15s ease infinite;
+    color: white;
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     overflow: hidden;
     transition: all 0.3s ease;
     height: 100%;
@@ -605,7 +619,7 @@ body {
 
 .widget-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.3);
 }
 
 .widget-icon {
@@ -630,7 +644,7 @@ body {
 }
 
 .widget-content p {
-    color: #6c757d;
+    color: rgba(255, 255, 255, 0.8);
     font-size: 0.9rem;
     margin-bottom: 0.5rem;
 }
@@ -639,15 +653,19 @@ body {
 .stats-card {
     padding: 1.5rem;
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    background: linear-gradient(135deg, #6b17e6, #5e02ff, #bb00ff);
+    background-size: 200% 200%;
+    animation: gradient-shift 15s ease infinite;
+    color: white;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     height: 100%;
 }
 
 .stats-card h4 {
     margin-bottom: 1rem;
     font-size: 1.2rem;
-    color: #495057;
-    border-bottom: 1px solid #e9ecef;
+    color: white;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
     padding-bottom: 0.5rem;
 }
 
@@ -666,14 +684,14 @@ body {
 
 .stats-label {
     font-size: 0.9rem;
-    color: #6c757d;
+    color: rgba(255, 255, 255, 0.8);
     margin-right: 0.5rem;
 }
 
 .stats-value {
     font-size: 1rem;
     font-weight: 600;
-    color: #212529;
+    color: white;
     margin-left: auto;
 }
 
@@ -681,6 +699,50 @@ body {
 .task-status-btn {
     padding: 0.25rem 0.5rem;
     font-size: 0.8rem;
+}
+
+/* Table Styles */
+.table {
+    color: white !important;
+}
+
+.table thead {
+    background: rgba(107, 23, 230, 0.3);
+}
+
+.table tbody tr:hover {
+    background: rgba(107, 23, 230, 0.2) !important;
+}
+
+.table-hover tbody tr:hover {
+    background: rgba(107, 23, 230, 0.2) !important;
+    color: white !important;
+}
+
+.modal-content {
+    background: linear-gradient(135deg, #6b17e6, #5e02ff, #bb00ff);
+    background-size: 200% 200%;
+    animation: gradient-shift 15s ease infinite;
+    color: white;
+}
+
+.modal-header, .modal-footer {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.nav-tabs .nav-link {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.nav-tabs .nav-link.active {
+    background: rgba(0, 0, 0, 0.2);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.list-group-item {
+    background-color: transparent;
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
 /* Department-specific colors */
