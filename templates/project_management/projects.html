@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Projects - Employee Management System{% endblock %}
+
+{% block header %}Project Management{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group me-2">
+    <a href="{{ url_for('project_management.new_project') }}" class="btn btn-sm btn-outline-primary">
+        <i class="fas fa-plus me-1"></i> New Project
+    </a>
+</div>
+<div class="btn-group">
+    <a href="{{ url_for('project_management.export_projects') }}" class="btn btn-sm btn-outline-secondary">
+        <i class="fas fa-file-csv me-1"></i> Export CSV
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        {% if projects %}
+        <div class="row">
+            {% for project in projects %}
+            <div class="col-md-6 col-xl-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">{{ project.name }}</h5>
+                        <span class="badge {{ 'bg-success' if project.status == 'completed' else 'bg-warning text-dark' if project.status == 'in-progress' else 'bg-info text-dark' if project.status == 'planning' else 'bg-danger' }}">
+                            {{ project.status|replace('-', ' ')|capitalize }}
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-2">
+                            <i class="fas fa-user me-1"></i> Client: {{ project.client or 'Not specified' }}
+                        </p>
+                        <p class="text-muted mb-2">
+                            <i class="fas fa-calendar me-1"></i> Start: {{ project.start_date | formatdate }}
+                        </p>
+                        <p class="text-muted mb-3">
+                            <i class="fas fa-calendar-check me-1"></i> End: {{ project.end_date | formatdate if project.end_date else 'Not set' }}
+                        </p>
+                        
+                        <p class="card-text text-truncate">{{ project.description or 'No description provided' }}</p>
+                        
+                        <div class="mt-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Progress</span>
+                                <span>{{ project.progress }}%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ project.progress }}%;" aria-valuenow="{{ project.progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent d-flex justify-content-between">
+                        <a href="{{ url_for('project_management.project_detail', id=project.id) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye me-1"></i> View Details
+                        </a>
+                        {% if current_user.is_admin %}
+                        <div class="btn-group">
+                            <a href="{{ url_for('project_management.edit_project', id=project.id) }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ project.id }}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Delete Modal -->
+                <div class="modal fade" id="deleteModal{{ project.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Confirm Delete</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                Are you sure you want to delete the project <strong>{{ project.name }}</strong>? This action cannot be undone and will delete all associated tasks.
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <form action="{{ url_for('project_management.delete_project', id=project.id) }}" method="POST">
+                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-project-diagram mb-3" style="font-size: 3rem;"></i>
+                <h3>No Projects Found</h3>
+                <p class="text-muted">Start by creating your first project</p>
+                <a href="{{ url_for('project_management.new_project') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i> Create New Project
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

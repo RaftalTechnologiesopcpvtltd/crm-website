@@ -1,0 +1,444 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.name }} - Project Details{% endblock %}
+
+{% block header %}{{ project.name }}{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group me-2">
+    <a href="{{ url_for('project_management.new_task', project_id=project.id) }}" class="btn btn-sm btn-outline-primary">
+        <i class="fas fa-plus me-1"></i> Add Task
+    </a>
+</div>
+<div class="btn-group me-2">
+    <a href="{{ url_for('project_management.edit_project', id=project.id) }}" class="btn btn-sm btn-outline-secondary">
+        <i class="fas fa-edit me-1"></i> Edit Project
+    </a>
+</div>
+<div class="btn-group">
+    <a href="{{ url_for('project_management.project_report', id=project.id) }}" class="btn btn-sm btn-outline-info">
+        <i class="fas fa-file-pdf me-1"></i> Generate Report
+    </a>
+    <button class="btn btn-sm btn-outline-secondary print-btn">
+        <i class="fas fa-print me-1"></i> Print
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Client</h6>
+                        <p>{{ project.client or 'Not specified' }}</p>
+                        
+                        <h6 class="fw-bold">Status</h6>
+                        <p>
+                            <span class="badge {{ 'bg-success' if project.status == 'completed' else 'bg-warning text-dark' if project.status == 'in-progress' else 'bg-info text-dark' if project.status == 'planning' else 'bg-danger' }}">
+                                {{ project.status|replace('-', ' ')|capitalize }}
+                            </span>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Start Date</h6>
+                        <p>{{ project.start_date | formatdate }}</p>
+                        
+                        <h6 class="fw-bold">End Date</h6>
+                        <p>{{ project.end_date | formatdate if project.end_date else 'Not set' }}</p>
+                    </div>
+                </div>
+                
+                <h6 class="fw-bold">Description</h6>
+                <p>{{ project.description or 'No description provided' }}</p>
+                
+                <div class="mt-4">
+                    <h6 class="fw-bold">Progress</h6>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>{{ project.progress }}% Complete</span>
+                        {% if project.budget %}
+                        <span>Budget: ${{ "%.2f"|format(project.budget) }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="progress" style="height: 10px;">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ project.progress }}%;" aria-valuenow="{{ project.progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Task Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <div class="p-3 rounded bg-dark">
+                            <h3>{{ tasks|selectattr('status', 'equalto', 'to-do')|list|length }}</h3>
+                            <p class="mb-0 text-muted">To Do</p>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="p-3 rounded bg-dark">
+                            <h3>{{ tasks|selectattr('status', 'equalto', 'in-progress')|list|length }}</h3>
+                            <p class="mb-0 text-muted">In Progress</p>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="p-3 rounded bg-dark">
+                            <h3>{{ tasks|selectattr('status', 'equalto', 'in-review')|list|length }}</h3>
+                            <p class="mb-0 text-muted">In Review</p>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="p-3 rounded bg-dark">
+                            <h3>{{ tasks|selectattr('status', 'equalto', 'completed')|list|length }}</h3>
+                            <p class="mb-0 text-muted">Completed</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Tasks</h5>
+                <a href="{{ url_for('project_management.new_task', project_id=project.id) }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus me-1"></i> Add Task
+                </a>
+            </div>
+            <div class="card-body">
+                {% if tasks %}
+                <ul class="nav nav-tabs mb-3" id="taskTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-tasks" type="button" role="tab" aria-controls="all-tasks" aria-selected="true">All</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="todo-tab" data-bs-toggle="tab" data-bs-target="#todo-tasks" type="button" role="tab" aria-controls="todo-tasks" aria-selected="false">To Do</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="inprogress-tab" data-bs-toggle="tab" data-bs-target="#inprogress-tasks" type="button" role="tab" aria-controls="inprogress-tasks" aria-selected="false">In Progress</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed-tasks" type="button" role="tab" aria-controls="completed-tasks" aria-selected="false">Completed</button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content" id="taskTabsContent">
+                    <div class="tab-pane fade show active" id="all-tasks" role="tabpanel" aria-labelledby="all-tab">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Task</th>
+                                        <th>Assigned To</th>
+                                        <th>Due Date</th>
+                                        <th>Priority</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for task in tasks %}
+                                    <tr>
+                                        <td>{{ task.title }}</td>
+                                        <td>{{ task.assigned_to.username if task.assigned_to else 'Unassigned' }}</td>
+                                        <td>{{ task.due_date | formatdate if task.due_date else 'Not set' }}</td>
+                                        <td>
+                                            <span class="badge {{ 'bg-danger' if task.priority == 'high' or task.priority == 'urgent' else 'bg-warning text-dark' if task.priority == 'medium' else 'bg-info text-dark' }}">
+                                                {{ task.priority|capitalize }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge {{ 'bg-success' if task.status == 'completed' else 'bg-warning text-dark' if task.status == 'in-progress' else 'bg-info text-dark' if task.status == 'in-review' else 'bg-secondary' }}">
+                                                {{ task.status|replace('-', ' ')|capitalize }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#viewTaskModal{{ task.id }}">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                {% if current_user.is_admin or task.user_id == current_user.id %}
+                                                <a href="{{ url_for('project_management.edit_task', id=task.id) }}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteTaskModal{{ task.id }}">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-pane fade" id="todo-tasks" role="tabpanel" aria-labelledby="todo-tab">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Task</th>
+                                        <th>Assigned To</th>
+                                        <th>Due Date</th>
+                                        <th>Priority</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for task in tasks if task.status == 'to-do' %}
+                                    <tr>
+                                        <td>{{ task.title }}</td>
+                                        <td>{{ task.assigned_to.username if task.assigned_to else 'Unassigned' }}</td>
+                                        <td>{{ task.due_date | formatdate if task.due_date else 'Not set' }}</td>
+                                        <td>
+                                            <span class="badge {{ 'bg-danger' if task.priority == 'high' or task.priority == 'urgent' else 'bg-warning text-dark' if task.priority == 'medium' else 'bg-info text-dark' }}">
+                                                {{ task.priority|capitalize }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#viewTaskModal{{ task.id }}">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                {% if current_user.is_admin or task.user_id == current_user.id %}
+                                                <a href="{{ url_for('project_management.edit_task', id=task.id) }}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center">No tasks in To-Do status</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-pane fade" id="inprogress-tasks" role="tabpanel" aria-labelledby="inprogress-tab">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Task</th>
+                                        <th>Assigned To</th>
+                                        <th>Due Date</th>
+                                        <th>Priority</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for task in tasks if task.status == 'in-progress' %}
+                                    <tr>
+                                        <td>{{ task.title }}</td>
+                                        <td>{{ task.assigned_to.username if task.assigned_to else 'Unassigned' }}</td>
+                                        <td>{{ task.due_date | formatdate if task.due_date else 'Not set' }}</td>
+                                        <td>
+                                            <span class="badge {{ 'bg-danger' if task.priority == 'high' or task.priority == 'urgent' else 'bg-warning text-dark' if task.priority == 'medium' else 'bg-info text-dark' }}">
+                                                {{ task.priority|capitalize }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#viewTaskModal{{ task.id }}">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                {% if current_user.is_admin or task.user_id == current_user.id %}
+                                                <a href="{{ url_for('project_management.edit_task', id=task.id) }}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center">No tasks in In-Progress status</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-pane fade" id="completed-tasks" role="tabpanel" aria-labelledby="completed-tab">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Task</th>
+                                        <th>Assigned To</th>
+                                        <th>Due Date</th>
+                                        <th>Priority</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for task in tasks if task.status == 'completed' %}
+                                    <tr>
+                                        <td>{{ task.title }}</td>
+                                        <td>{{ task.assigned_to.username if task.assigned_to else 'Unassigned' }}</td>
+                                        <td>{{ task.due_date | formatdate if task.due_date else 'Not set' }}</td>
+                                        <td>
+                                            <span class="badge {{ 'bg-danger' if task.priority == 'high' or task.priority == 'urgent' else 'bg-warning text-dark' if task.priority == 'medium' else 'bg-info text-dark' }}">
+                                                {{ task.priority|capitalize }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#viewTaskModal{{ task.id }}">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center">No completed tasks</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-tasks mb-3" style="font-size: 2.5rem;"></i>
+                    <h4>No Tasks Found</h4>
+                    <p class="text-muted">Start by adding tasks to this project</p>
+                    <a href="{{ url_for('project_management.new_task', project_id=project.id) }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i> Add First Task
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Task View Modals -->
+{% for task in tasks %}
+<div class="modal fade" id="viewTaskModal{{ task.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ task.title }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <h6 class="fw-bold">Description</h6>
+                    <p>{{ task.description or 'No description provided' }}</p>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Assigned To</h6>
+                        <p>{{ task.assigned_to.username if task.assigned_to else 'Unassigned' }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Due Date</h6>
+                        <p>{{ task.due_date | formatdate if task.due_date else 'Not set' }}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Priority</h6>
+                        <p>
+                            <span class="badge {{ 'bg-danger' if task.priority == 'high' or task.priority == 'urgent' else 'bg-warning text-dark' if task.priority == 'medium' else 'bg-info text-dark' }}">
+                                {{ task.priority|capitalize }}
+                            </span>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Status</h6>
+                        <p>
+                            <span class="badge {{ 'bg-success' if task.status == 'completed' else 'bg-warning text-dark' if task.status == 'in-progress' else 'bg-info text-dark' if task.status == 'in-review' else 'bg-secondary' }}">
+                                {{ task.status|replace('-', ' ')|capitalize }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <h6 class="fw-bold">Created</h6>
+                    <p>{{ task.created_at | formatdate('%Y-%m-%d %H:%M') }}</p>
+                </div>
+                
+                {% if current_user.is_admin or task.user_id == current_user.id %}
+                <div class="card bg-dark mt-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">Update Status</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <form action="{{ url_for('project_management.update_task_status', id=task.id, status='to-do') }}" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-sm {{ 'btn-secondary' if task.status == 'to-do' else 'btn-outline-secondary' }}">To Do</button>
+                            </form>
+                            
+                            <form action="{{ url_for('project_management.update_task_status', id=task.id, status='in-progress') }}" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-sm {{ 'btn-warning' if task.status == 'in-progress' else 'btn-outline-warning' }}">In Progress</button>
+                            </form>
+                            
+                            <form action="{{ url_for('project_management.update_task_status', id=task.id, status='in-review') }}" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-sm {{ 'btn-info' if task.status == 'in-review' else 'btn-outline-info' }}">In Review</button>
+                            </form>
+                            
+                            <form action="{{ url_for('project_management.update_task_status', id=task.id, status='completed') }}" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-sm {{ 'btn-success' if task.status == 'completed' else 'btn-outline-success' }}">Completed</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                {% if current_user.is_admin or task.user_id == current_user.id %}
+                <a href="{{ url_for('project_management.edit_task', id=task.id) }}" class="btn btn-primary">Edit</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Task Delete Modals -->
+<div class="modal fade" id="deleteTaskModal{{ task.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete the task <strong>{{ task.title }}</strong>? This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('project_management.delete_task', id=task.id) }}" method="POST">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

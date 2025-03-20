@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Employee Management System{% endblock %}
+
+{% block header %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">{{ project.name }}</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('project_management.edit_task', id=task.id) if task else url_for('project_management.new_task', project_id=project.id) }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="title" class="form-label">Task Title*</label>
+                            {{ form.title(class="form-control", id="title") }}
+                            {% if form.title.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.title.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="description" class="form-label">Description</label>
+                            {{ form.description(class="form-control", id="description", rows=3) }}
+                            {% if form.description.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.description.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="user_id" class="form-label">Assign To</label>
+                            {{ form.user_id(class="form-select", id="user_id") }}
+                            {% if form.user_id.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.user_id.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">User who will be responsible for this task.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="due_date" class="form-label">Due Date</label>
+                            {{ form.due_date(class="form-control", id="due_date", type="date") }}
+                            {% if form.due_date.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.due_date.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="priority" class="form-label">Priority</label>
+                            {{ form.priority(class="form-select", id="priority") }}
+                            {% if form.priority.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.priority.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="status" class="form-label">Status</label>
+                            {{ form.status(class="form-select", id="status") }}
+                            {% if form.status.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.status.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('project_management.project_detail', id=project.id) }}" class="btn btn-secondary me-md-2">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> Save Task
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Priority color coding
+        const prioritySelect = document.getElementById('priority');
+        
+        prioritySelect.addEventListener('change', function() {
+            // Remove previous classes
+            this.classList.remove('border-info', 'border-warning', 'border-danger');
+            
+            // Add appropriate class based on selection
+            if (this.value === 'low') {
+                this.classList.add('border-info');
+            } else if (this.value === 'medium') {
+                this.classList.add('border-warning');
+            } else if (this.value === 'high' || this.value === 'urgent') {
+                this.classList.add('border-danger');
+            }
+        });
+        
+        // Trigger change to set initial color
+        const event = new Event('change');
+        prioritySelect.dispatchEvent(event);
+        
+        // Status color coding
+        const statusSelect = document.getElementById('status');
+        
+        statusSelect.addEventListener('change', function() {
+            // Remove previous classes
+            this.classList.remove('border-secondary', 'border-warning', 'border-info', 'border-success');
+            
+            // Add appropriate class based on selection
+            if (this.value === 'to-do') {
+                this.classList.add('border-secondary');
+            } else if (this.value === 'in-progress') {
+                this.classList.add('border-warning');
+            } else if (this.value === 'in-review') {
+                this.classList.add('border-info');
+            } else if (this.value === 'completed') {
+                this.classList.add('border-success');
+            }
+        });
+        
+        // Trigger change to set initial color
+        const statusEvent = new Event('change');
+        statusSelect.dispatchEvent(statusEvent);
+        
+        // Due date validation
+        const dueDateInput = document.getElementById('due_date');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        dueDateInput.addEventListener('change', function() {
+            if (this.value) {
+                const selectedDate = new Date(this.value);
+                if (selectedDate < today) {
+                    alert('Due date cannot be in the past');
+                    this.value = '';
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

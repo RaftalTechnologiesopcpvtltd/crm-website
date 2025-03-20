@@ -1,0 +1,345 @@
+{% extends "base.html" %}
+
+{% block title %}Tasks - Employee Management System{% endblock %}
+
+{% block header %}My Tasks{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <!-- Task summary cards -->
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <div class="display-4 mb-2">
+                    {{ tasks|selectattr('status', 'equalto', 'to-do')|list|length }}
+                </div>
+                <h5 class="card-title">To Do</h5>
+            </div>
+            <div class="card-footer bg-secondary">
+                <small class="text-white">Not started</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <div class="display-4 mb-2">
+                    {{ tasks|selectattr('status', 'equalto', 'in-progress')|list|length }}
+                </div>
+                <h5 class="card-title">In Progress</h5>
+            </div>
+            <div class="card-footer bg-warning">
+                <small class="text-dark">Currently working</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <div class="display-4 mb-2">
+                    {{ tasks|selectattr('status', 'equalto', 'in-review')|list|length }}
+                </div>
+                <h5 class="card-title">In Review</h5>
+            </div>
+            <div class="card-footer bg-info">
+                <small class="text-dark">Ready for review</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <div class="display-4 mb-2">
+                    {{ tasks|selectattr('status', 'equalto', 'completed')|list|length }}
+                </div>
+                <h5 class="card-title">Completed</h5>
+            </div>
+            <div class="card-footer bg-success">
+                <small class="text-white">Finished tasks</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" id="taskTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-tasks" type="button" role="tab" aria-controls="all-tasks" aria-selected="true">All Tasks</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="todo-tab" data-bs-toggle="tab" data-bs-target="#todo-tasks" type="button" role="tab" aria-controls="todo-tasks" aria-selected="false">To Do</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="progress-tab" data-bs-toggle="tab" data-bs-target="#progress-tasks" type="button" role="tab" aria-controls="progress-tasks" aria-selected="false">In Progress</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed-tasks" type="button" role="tab" aria-controls="completed-tasks" aria-selected="false">Completed</button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="taskTabsContent">
+                    <!-- All Tasks -->
+                    <div class="tab-pane fade show active" id="all-tasks" role="tabpanel" aria-labelledby="all-tab">
+                        {% if tasks %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Task</th>
+                                        <th>Project</th>
+                                        <th>Due Date</th>
+                                        <th>Priority</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for task in tasks %}
+                                    <tr>
+                                        <td>{{ task.title }}</td>
+                                        <td>
+                                            <a href="{{ url_for('project_management.project_detail', id=task.project_id) }}">
+                                                {{ task.project.name }}
+                                            </a>
+                                        </td>
+                                        <td>{{ task.due_date | formatdate if task.due_date else 'Not set' }}</td>
+                                        <td>
+                                            <span class="badge {{ 'bg-danger' if task.priority == 'high' or task.priority == 'urgent' else 'bg-warning text-dark' if task.priority == 'medium' else 'bg-info text-dark' }}">
+                                                {{ task.priority|capitalize }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge {{ 'bg-success' if task.status == 'completed' else 'bg-warning text-dark' if task.status == 'in-progress' else 'bg-info text-dark' if task.status == 'in-review' else 'bg-secondary' }}">
+                                                {{ task.status|replace('-', ' ')|capitalize }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" id="taskActions{{ task.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    Actions
+                                                </button>
+                                                <ul class="dropdown-menu" aria-labelledby="taskActions{{ task.id }}">
+                                                    <li>
+                                                        <a class="dropdown-item" href="{{ url_for('project_management.edit_task', id=task.id) }}">
+                                                            <i class="fas fa-edit me-1"></i> Edit
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <hr class="dropdown-divider">
+                                                    </li>
+                                                    <li>
+                                                        <form action="{{ url_for('project_management.update_task_status', id=task.id, status='to-do') }}" method="POST">
+                                                            <button type="submit" class="dropdown-item">
+                                                                <i class="fas fa-list me-1"></i> Set to To-Do
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                    <li>
+                                                        <form action="{{ url_for('project_management.update_task_status', id=task.id, status='in-progress') }}" method="POST">
+                                                            <button type="submit" class="dropdown-item">
+                                                                <i class="fas fa-spinner me-1"></i> Set to In-Progress
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                    <li>
+                                                        <form action="{{ url_for('project_management.update_task_status', id=task.id, status='in-review') }}" method="POST">
+                                                            <button type="submit" class="dropdown-item">
+                                                                <i class="fas fa-search me-1"></i> Set to In-Review
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                    <li>
+                                                        <form action="{{ url_for('project_management.update_task_status', id=task.id, status='completed') }}" method="POST">
+                                                            <button type="submit" class="dropdown-item">
+                                                                <i class="fas fa-check me-1"></i> Set to Completed
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-tasks mb-3" style="font-size: 3rem;"></i>
+                            <h4>No Tasks Assigned</h4>
+                            <p class="text-muted">You don't have any tasks assigned to you.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- To Do Tasks -->
+                    <div class="tab-pane fade" id="todo-tasks" role="tabpanel" aria-labelledby="todo-tab">
+                        {% set todo_tasks = tasks|selectattr('status', 'equalto', 'to-do')|list %}
+                        {% if todo_tasks %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Task</th>
+                                        <th>Project</th>
+                                        <th>Due Date</th>
+                                        <th>Priority</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for task in todo_tasks %}
+                                    <tr>
+                                        <td>{{ task.title }}</td>
+                                        <td>
+                                            <a href="{{ url_for('project_management.project_detail', id=task.project_id) }}">
+                                                {{ task.project.name }}
+                                            </a>
+                                        </td>
+                                        <td>{{ task.due_date | formatdate if task.due_date else 'Not set' }}</td>
+                                        <td>
+                                            <span class="badge {{ 'bg-danger' if task.priority == 'high' or task.priority == 'urgent' else 'bg-warning text-dark' if task.priority == 'medium' else 'bg-info text-dark' }}">
+                                                {{ task.priority|capitalize }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <a href="{{ url_for('project_management.edit_task', id=task.id) }}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <form action="{{ url_for('project_management.update_task_status', id=task.id, status='in-progress') }}" method="POST" class="d-inline">
+                                                    <button type="submit" class="btn btn-sm btn-outline-warning">
+                                                        <i class="fas fa-play"></i> Start
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-check-circle mb-3" style="font-size: 3rem;"></i>
+                            <h4>No To-Do Tasks</h4>
+                            <p class="text-muted">You don't have any pending tasks to start.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- In Progress Tasks -->
+                    <div class="tab-pane fade" id="progress-tasks" role="tabpanel" aria-labelledby="progress-tab">
+                        {% set progress_tasks = tasks|selectattr('status', 'equalto', 'in-progress')|list %}
+                        {% if progress_tasks %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Task</th>
+                                        <th>Project</th>
+                                        <th>Due Date</th>
+                                        <th>Priority</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for task in progress_tasks %}
+                                    <tr>
+                                        <td>{{ task.title }}</td>
+                                        <td>
+                                            <a href="{{ url_for('project_management.project_detail', id=task.project_id) }}">
+                                                {{ task.project.name }}
+                                            </a>
+                                        </td>
+                                        <td>{{ task.due_date | formatdate if task.due_date else 'Not set' }}</td>
+                                        <td>
+                                            <span class="badge {{ 'bg-danger' if task.priority == 'high' or task.priority == 'urgent' else 'bg-warning text-dark' if task.priority == 'medium' else 'bg-info text-dark' }}">
+                                                {{ task.priority|capitalize }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <a href="{{ url_for('project_management.edit_task', id=task.id) }}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <form action="{{ url_for('project_management.update_task_status', id=task.id, status='in-review') }}" method="POST" class="d-inline">
+                                                    <button type="submit" class="btn btn-sm btn-outline-info">
+                                                        <i class="fas fa-search"></i> Review
+                                                    </button>
+                                                </form>
+                                                <form action="{{ url_for('project_management.update_task_status', id=task.id, status='completed') }}" method="POST" class="d-inline">
+                                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                                        <i class="fas fa-check"></i> Complete
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-spinner mb-3" style="font-size: 3rem;"></i>
+                            <h4>No In-Progress Tasks</h4>
+                            <p class="text-muted">You don't have any tasks in progress.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Completed Tasks -->
+                    <div class="tab-pane fade" id="completed-tasks" role="tabpanel" aria-labelledby="completed-tab">
+                        {% set completed_tasks = tasks|selectattr('status', 'equalto', 'completed')|list %}
+                        {% if completed_tasks %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Task</th>
+                                        <th>Project</th>
+                                        <th>Due Date</th>
+                                        <th>Priority</th>
+                                        <th>Completed</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for task in completed_tasks %}
+                                    <tr>
+                                        <td>{{ task.title }}</td>
+                                        <td>
+                                            <a href="{{ url_for('project_management.project_detail', id=task.project_id) }}">
+                                                {{ task.project.name }}
+                                            </a>
+                                        </td>
+                                        <td>{{ task.due_date | formatdate if task.due_date else 'Not set' }}</td>
+                                        <td>
+                                            <span class="badge {{ 'bg-danger' if task.priority == 'high' or task.priority == 'urgent' else 'bg-warning text-dark' if task.priority == 'medium' else 'bg-info text-dark' }}">
+                                                {{ task.priority|capitalize }}
+                                            </span>
+                                        </td>
+                                        <td>{{ task.updated_at | formatdate('%Y-%m-%d') }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-clipboard-check mb-3" style="font-size: 3rem;"></i>
+                            <h4>No Completed Tasks</h4>
+                            <p class="text-muted">You haven't completed any tasks yet.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Employee Management System{% endblock %}
+
+{% block header %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('project_management.edit_project', id=project.id) if project else url_for('project_management.new_project') }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="name" class="form-label">Project Name*</label>
+                            {{ form.name(class="form-control", id="name") }}
+                            {% if form.name.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.name.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="description" class="form-label">Description</label>
+                            {{ form.description(class="form-control", id="description", rows=4) }}
+                            {% if form.description.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.description.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">Provide a detailed description of the project.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="client" class="form-label">Client</label>
+                            {{ form.client(class="form-control", id="client") }}
+                            {% if form.client.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.client.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="budget" class="form-label">Budget ($)</label>
+                            {{ form.budget(class="form-control", id="budget") }}
+                            {% if form.budget.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.budget.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="start_date" class="form-label">Start Date*</label>
+                            {{ form.start_date(class="form-control", id="start_date", type="date") }}
+                            {% if form.start_date.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.start_date.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="end_date" class="form-label">End Date</label>
+                            {{ form.end_date(class="form-control", id="end_date", type="date") }}
+                            {% if form.end_date.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.end_date.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">Leave blank if not defined yet.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="status" class="form-label">Status*</label>
+                            {{ form.status(class="form-select", id="status") }}
+                            {% if form.status.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.status.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('project_management.project_detail', id=project.id) if project else url_for('project_management.projects') }}" class="btn btn-secondary me-md-2">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> Save Project
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Date validation
+        const startDateInput = document.getElementById('start_date');
+        const endDateInput = document.getElementById('end_date');
+        
+        endDateInput.addEventListener('change', function() {
+            if (startDateInput.value && this.value) {
+                if (new Date(this.value) < new Date(startDateInput.value)) {
+                    alert('End date cannot be earlier than start date');
+                    this.value = '';
+                }
+            }
+        });
+        
+        startDateInput.addEventListener('change', function() {
+            if (endDateInput.value && this.value) {
+                if (new Date(endDateInput.value) < new Date(this.value)) {
+                    endDateInput.value = '';
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

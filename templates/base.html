@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Employee Management System{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    {% block styles %}{% endblock %}
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <div class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-light">
+                        <span>EMS</span>
+                        <button id="sidebarToggle" class="btn btn-link d-md-none rounded-circle">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+                    <hr>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'project_management.dashboard' %}active{% endif %}" href="{{ url_for('project_management.dashboard') }}">
+                                <i class="fas fa-tachometer-alt me-2"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'project_management.projects' in request.endpoint %}active{% endif %}" href="{{ url_for('project_management.projects') }}">
+                                <i class="fas fa-project-diagram me-2"></i>
+                                Projects
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'project_management.tasks' == request.endpoint %}active{% endif %}" href="{{ url_for('project_management.tasks') }}">
+                                <i class="fas fa-tasks me-2"></i>
+                                Tasks
+                            </a>
+                        </li>
+                        
+                        <hr>
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'hr.employees' in request.endpoint %}active{% endif %}" href="{{ url_for('hr.employees') }}">
+                                <i class="fas fa-users me-2"></i>
+                                Employees
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'hr.leaves' in request.endpoint %}active{% endif %}" href="{{ url_for('hr.leaves') }}">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                Leave Management
+                            </a>
+                        </li>
+                        {% if current_user.is_admin %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'hr.payroll' in request.endpoint %}active{% endif %}" href="{{ url_for('hr.payroll') }}">
+                                <i class="fas fa-money-bill-wave me-2"></i>
+                                Payroll
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        <hr>
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'accounts.profile' == request.endpoint %}active{% endif %}" href="{{ url_for('accounts.profile') }}">
+                                <i class="fas fa-user-circle me-2"></i>
+                                Profile
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('accounts.logout') }}">
+                                <i class="fas fa-sign-out-alt me-2"></i>
+                                Logout
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">{% block header %}Dashboard{% endblock %}</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        {% block page_actions %}{% endblock %}
+                    </div>
+                </div>
+                
+                <!-- Flash messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                <!-- Main content block -->
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

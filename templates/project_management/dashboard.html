@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Employee Management System{% endblock %}
+
+{% block header %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Project Statistics -->
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Project Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="stat-card bg-dark">
+                            <i class="fas fa-project-diagram text-primary"></i>
+                            <h2>{{ total_projects }}</h2>
+                            <p>Total Projects</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="stat-card bg-dark">
+                            <i class="fas fa-check-circle text-success"></i>
+                            <h2>{{ completed_projects }}</h2>
+                            <p>Completed Projects</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="stat-card bg-dark">
+                            <i class="fas fa-spinner text-warning"></i>
+                            <h2>{{ in_progress_projects }}</h2>
+                            <p>In Progress</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="stat-card bg-dark">
+                            <i class="fas fa-clipboard-list text-info"></i>
+                            <h2>{{ planning_projects }}</h2>
+                            <p>Planning</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Task Statistics -->
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Task Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="stat-card bg-dark">
+                            <i class="fas fa-tasks text-primary"></i>
+                            <h2>{{ total_tasks }}</h2>
+                            <p>Total Tasks</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="stat-card bg-dark">
+                            <i class="fas fa-check text-success"></i>
+                            <h2>{{ completed_tasks }}</h2>
+                            <p>Completed Tasks</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="stat-card bg-dark">
+                            <i class="fas fa-spinner text-warning"></i>
+                            <h2>{{ in_progress_tasks }}</h2>
+                            <p>In Progress</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="stat-card bg-dark">
+                            <i class="fas fa-list text-info"></i>
+                            <h2>{{ todo_tasks }}</h2>
+                            <p>To-Do</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Projects -->
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Recent Projects</h5>
+                <a href="{{ url_for('project_management.projects') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if projects %}
+                <div class="list-group">
+                    {% for project in projects %}
+                    <a href="{{ url_for('project_management.project_detail', id=project.id) }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ project.name }}</h5>
+                            <small class="text-muted">{{ project.start_date | formatdate }}</small>
+                        </div>
+                        <p class="mb-1 text-truncate">{{ project.description or 'No description' }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">{{ project.client or 'No client' }}</small>
+                            <span class="badge {{ 'bg-success' if project.status == 'completed' else 'bg-warning text-dark' if project.status == 'in-progress' else 'bg-info text-dark' if project.status == 'planning' else 'bg-danger' }}">
+                                {{ project.status|replace('-', ' ')|capitalize }}
+                            </span>
+                        </div>
+                        <div class="progress mt-2" style="height: 5px;">
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: {{ project.progress }}%;" aria-valuenow="{{ project.progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <small class="d-block text-end mt-1">{{ project.progress }}% complete</small>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-center text-muted my-4">No projects found.</p>
+                <div class="text-center">
+                    <a href="{{ url_for('project_management.new_project') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i> Create New Project
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- My Tasks -->
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">My Tasks</h5>
+                <a href="{{ url_for('project_management.tasks') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if user_tasks %}
+                <div class="list-group">
+                    {% for task in user_tasks %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ task.title }}</h5>
+                            <small class="text-muted">{{ task.due_date | formatdate if task.due_date else 'No due date' }}</small>
+                        </div>
+                        <p class="mb-1 text-truncate">{{ task.description or 'No description' }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">Project: {{ task.project.name }}</small>
+                            <div>
+                                <span class="badge {{ 'bg-danger' if task.priority == 'high' or task.priority == 'urgent' else 'bg-warning text-dark' if task.priority == 'medium' else 'bg-info text-dark' }}">
+                                    {{ task.priority|capitalize }}
+                                </span>
+                                <span class="badge ms-1 {{ 'bg-success' if task.status == 'completed' else 'bg-warning text-dark' if task.status == 'in-progress' else 'bg-info text-dark' if task.status == 'in-review' else 'bg-secondary' }}">
+                                    {{ task.status|replace('-', ' ')|capitalize }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Quick status update buttons -->
+                        <div class="mt-2 text-end">
+                            <div class="btn-group btn-group-sm">
+                                {% if task.status != 'to-do' %}
+                                <form action="{{ url_for('project_management.update_task_status', id=task.id, status='to-do') }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-secondary task-status-btn">To Do</button>
+                                </form>
+                                {% endif %}
+                                
+                                {% if task.status != 'in-progress' %}
+                                <form action="{{ url_for('project_management.update_task_status', id=task.id, status='in-progress') }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-warning task-status-btn">In Progress</button>
+                                </form>
+                                {% endif %}
+                                
+                                {% if task.status != 'completed' %}
+                                <form action="{{ url_for('project_management.update_task_status', id=task.id, status='completed') }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-success task-status-btn">Complete</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-center text-muted my-4">No tasks assigned to you.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if current_user.is_admin %}
+<!-- Admin Section -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary">
+                <h5 class="card-title mb-0">Administrator Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-user-plus mb-3" style="font-size: 2rem;"></i>
+                                <h5>Employee Management</h5>
+                                <p class="text-muted">Manage all employee records</p>
+                                <a href="{{ url_for('hr.employees') }}" class="btn btn-outline-primary">Go to Employees</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-calendar-check mb-3" style="font-size: 2rem;"></i>
+                                <h5>Leave Approvals</h5>
+                                <p class="text-muted">Manage employee leave requests</p>
+                                <a href="{{ url_for('hr.leaves') }}" class="btn btn-outline-primary">Go to Leaves</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-money-check-alt mb-3" style="font-size: 2rem;"></i>
+                                <h5>Payroll Processing</h5>
+                                <p class="text-muted">Manage employee payroll</p>
+                                <a href="{{ url_for('hr.payroll') }}" class="btn btn-outline-primary">Go to Payroll</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-project-diagram mb-3" style="font-size: 2rem;"></i>
+                                <h5>Project Management</h5>
+                                <p class="text-muted">Create and manage projects</p>
+                                <a href="{{ url_for('project_management.projects') }}" class="btn btn-outline-primary">Go to Projects</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Employee Management System{% endblock %}
+
+{% block header %}User Profile{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h4>Update Your Profile</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('accounts.profile') }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        {{ form.username(class="form-control", id="username") }}
+                        {% if form.username.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.username.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address</label>
+                        {{ form.email(class="form-control", id="email") }}
+                        {% if form.email.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.email.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <hr>
+                    <h5>Change Password</h5>
+                    <p class="text-muted small">Leave blank if you don't want to change your password</p>
+                    
+                    <div class="mb-3">
+                        <label for="current_password" class="form-label">Current Password</label>
+                        {{ form.current_password(class="form-control", id="current_password") }}
+                        {% if form.current_password.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.current_password.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">New Password</label>
+                        {{ form.new_password(class="form-control", id="new_password") }}
+                        {% if form.new_password.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.new_password.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirm New Password</label>
+                        {{ form.confirm_password(class="form-control", id="confirm_password") }}
+                        {% if form.confirm_password.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.confirm_password.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> Update Profile
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        {% if current_user.is_admin %}
+        <div class="card mt-4">
+            <div class="card-header bg-warning text-dark">
+                <h4>Admin Privileges</h4>
+            </div>
+            <div class="card-body">
+                <p>You have administrator privileges on this system. You can:</p>
+                <ul>
+                    <li>Manage all employees</li>
+                    <li>Approve or reject leave requests</li>
+                    <li>Process payroll for all employees</li>
+                    <li>Create and manage all projects and tasks</li>
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if current_user.employee %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h4>Employee Information</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Name:</strong> {{ current_user.employee.full_name }}</p>
+                        <p><strong>Department:</strong> {{ current_user.employee.department }}</p>
+                        <p><strong>Position:</strong> {{ current_user.employee.position }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Hire Date:</strong> {{ current_user.employee.hire_date | formatdate }}</p>
+                        <p><strong>Phone:</strong> {{ current_user.employee.phone }}</p>
+                        <p><strong>Address:</strong> {{ current_user.employee.address }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

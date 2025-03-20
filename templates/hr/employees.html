@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Employees - Employee Management System{% endblock %}
+
+{% block header %}Employee Management{% endblock %}
+
+{% block page_actions %}
+    {% if current_user.is_admin %}
+    <div class="btn-group me-2">
+        <a href="{{ url_for('hr.new_employee') }}" class="btn btn-sm btn-outline-primary">
+            <i class="fas fa-plus me-1"></i> New Employee
+        </a>
+    </div>
+    <div class="btn-group me-2">
+        <a href="{{ url_for('hr.export_employees') }}" class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-file-csv me-1"></i> Export CSV
+        </a>
+        <a href="{{ url_for('hr.employee_report') }}" class="btn btn-sm btn-outline-info">
+            <i class="fas fa-file-pdf me-1"></i> Generate Report
+        </a>
+    </div>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        {% if employees %}
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Department</th>
+                                <th>Position</th>
+                                <th>Hire Date</th>
+                                {% if current_user.is_admin %}
+                                <th>Salary</th>
+                                {% endif %}
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for employee in employees %}
+                            <tr>
+                                <td>{{ employee.id }}</td>
+                                <td>{{ employee.full_name }}</td>
+                                <td>{{ employee.department }}</td>
+                                <td>{{ employee.position }}</td>
+                                <td>{{ employee.hire_date | formatdate }}</td>
+                                {% if current_user.is_admin %}
+                                <td>${{ "%.2f"|format(employee.salary) }}</td>
+                                {% endif %}
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{{ url_for('hr.employee_detail', id=employee.id) }}" class="btn btn-sm btn-outline-info">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if current_user.is_admin %}
+                                        <a href="{{ url_for('hr.edit_employee', id=employee.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ employee.id }}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <!-- Delete Modal -->
+                                    <div class="modal fade" id="deleteModal{{ employee.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ employee.id }}" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="deleteModalLabel{{ employee.id }}">Confirm Delete</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    Are you sure you want to delete the employee <strong>{{ employee.full_name }}</strong>? This action cannot be undone.
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <form action="{{ url_for('hr.delete_employee', id=employee.id) }}" method="POST">
+                                                        <button type="submit" class="btn btn-danger">Delete</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-body text-center">
+                <h4>No employees found</h4>
+                {% if current_user.is_admin %}
+                <p>Get started by adding employees to the system.</p>
+                <a href="{{ url_for('hr.new_employee') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i> Add Employee
+                </a>
+                {% else %}
+                <p>No employee records available to display.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

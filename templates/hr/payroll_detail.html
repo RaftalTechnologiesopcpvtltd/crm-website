@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Payroll Details - Employee Management System{% endblock %}
+
+{% block header %}Payroll Details{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <a href="{{ url_for('hr.payroll_slip', id=payroll.id) }}" class="btn btn-sm btn-outline-info">
+        <i class="fas fa-file-pdf me-1"></i> Generate Payslip
+    </a>
+    <button class="btn btn-sm btn-outline-secondary print-btn">
+        <i class="fas fa-print me-1"></i> Print
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Payroll Record #{{ payroll.id }}</h5>
+                <span class="badge {{ 'bg-success' if payroll.status == 'paid' else 'bg-warning text-dark' if payroll.status == 'processed' else 'bg-secondary' }}">
+                    {{ payroll.status|capitalize }}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Employee</h6>
+                        <p>
+                            <a href="{{ url_for('hr.employee_detail', id=payroll.employee_id) }}">
+                                {{ payroll.employee.full_name }}
+                            </a>
+                        </p>
+                        
+                        <h6 class="fw-bold">Department</h6>
+                        <p>{{ payroll.employee.department }}</p>
+                        
+                        <h6 class="fw-bold">Position</h6>
+                        <p>{{ payroll.employee.position }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Pay Period</h6>
+                        <p>{{ payroll.pay_period_start | formatdate }} to {{ payroll.pay_period_end | formatdate }}</p>
+                        
+                        <h6 class="fw-bold">Payment Date</h6>
+                        <p>{{ payroll.payment_date | formatdate }}</p>
+                        
+                        <h6 class="fw-bold">Status</h6>
+                        <p>
+                            <span class="badge {{ 'bg-success' if payroll.status == 'paid' else 'bg-warning text-dark' if payroll.status == 'processed' else 'bg-secondary' }}">
+                                {{ payroll.status|capitalize }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Description</th>
+                                <th class="text-end">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Base Salary</td>
+                                <td class="text-end">${{ "%.2f"|format(payroll.base_salary) }}</td>
+                            </tr>
+                            <tr>
+                                <td>Bonus</td>
+                                <td class="text-end">${{ "%.2f"|format(payroll.bonus) }}</td>
+                            </tr>
+                            <tr>
+                                <td>Deductions</td>
+                                <td class="text-end text-danger">-${{ "%.2f"|format(payroll.deductions) }}</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-dark">
+                                <th>Net Pay</th>
+                                <th class="text-end">${{ "%.2f"|format(payroll.net_pay) }}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{{ url_for('hr.payroll') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Back to Payroll
+                    </a>
+                    
+                    {% if payroll.status == 'pending' %}
+                    <form action="#" method="POST">
+                        <input type="hidden" name="status" value="processed">
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-check-circle me-1"></i> Mark as Processed
+                        </button>
+                    </form>
+                    {% endif %}
+                    
+                    {% if payroll.status == 'processed' %}
+                    <form action="#" method="POST">
+                        <input type="hidden" name="status" value="paid">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check-double me-1"></i> Mark as Paid
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Payment History</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Action</th>
+                                <th>Status</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>{{ payroll.created_at | formatdate('%Y-%m-%d %H:%M') }}</td>
+                                <td>Payroll Created</td>
+                                <td>
+                                    <span class="badge bg-secondary">Initial</span>
+                                </td>
+                                <td>${{ "%.2f"|format(payroll.net_pay) }}</td>
+                            </tr>
+                            {% if payroll.status == 'processed' or payroll.status == 'paid' %}
+                            <tr>
+                                <td>{{ payroll.updated_at | formatdate('%Y-%m-%d %H:%M') }}</td>
+                                <td>Payroll Processed</td>
+                                <td>
+                                    <span class="badge bg-warning text-dark">Processed</span>
+                                </td>
+                                <td>${{ "%.2f"|format(payroll.net_pay) }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if payroll.status == 'paid' %}
+                            <tr>
+                                <td>{{ payroll.payment_date | formatdate('%Y-%m-%d') }}</td>
+                                <td>Payment Made</td>
+                                <td>
+                                    <span class="badge bg-success">Paid</span>
+                                </td>
+                                <td>${{ "%.2f"|format(payroll.net_pay) }}</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

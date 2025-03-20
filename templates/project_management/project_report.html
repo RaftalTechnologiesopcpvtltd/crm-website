@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Report: {{ project.name }}</title>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #555;
+            padding-bottom: 10px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            font-size: 18px;
+            color: #555;
+        }
+        .report-date {
+            font-size: 14px;
+            color: #777;
+            margin-top: 5px;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .info-item {
+            margin-bottom: 10px;
+        }
+        .info-label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .info-value {
+            color: #555;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .table th, .table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .table th {
+            background-color: #f2f2f2;
+        }
+        .status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-completed {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-inprogress {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-review {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        .status-todo {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+        .priority-high, .priority-urgent {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .priority-medium {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .priority-low {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        .progress-container {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .progress-bar {
+            width: 100%;
+            background-color: #e0e0e0;
+            height: 20px;
+            border-radius: 10px;
+            margin-bottom: 5px;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #4caf50;
+            border-radius: 10px;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #777;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+        @media print {
+            body {
+                padding: 0;
+                font-size: 12px;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">Employee Management System</div>
+        <div class="subtitle">Project Report</div>
+        <div class="report-date">Generated on: {{ now.strftime('%Y-%m-%d %H:%M') }}</div>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">Project Details</div>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Project Name:</span>
+                <span class="info-value">{{ project.name }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Client:</span>
+                <span class="info-value">{{ project.client or 'Not specified' }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Start Date:</span>
+                <span class="info-value">{{ project.start_date | formatdate }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">End Date:</span>
+                <span class="info-value">{{ project.end_date | formatdate if project.end_date else 'Not set' }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Status:</span>
+                <span class="info-value">{{ project.status|replace('-', ' ')|capitalize }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Budget:</span>
+                <span class="info-value">{{ '$%.2f'|format(project.budget) if project.budget else 'Not specified' }}</span>
+            </div>
+        </div>
+        
+        <div class="info-item">
+            <span class="info-label">Description:</span>
+            <p class="info-value">{{ project.description or 'No description provided' }}</p>
+        </div>
+        
+        <div class="progress-container">
+            <span class="info-label">Project Progress: {{ project.progress }}%</span>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: {{ project.progress }}%;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">Task Summary</div>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Total Tasks:</span>
+                <span class="info-value">{{ tasks|length }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Completed Tasks:</span>
+                <span class="info-value">{{ tasks|selectattr('status', 'equalto', 'completed')|list|length }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">In Progress:</span>
+                <span class="info-value">{{ tasks|selectattr('status', 'equalto', 'in-progress')|list|length }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">In Review:</span>
+                <span class="info-value">{{ tasks|selectattr('status', 'equalto', 'in-review')|list|length }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">To Do:</span>
+                <span class="info-value">{{ tasks|selectattr('status', 'equalto', 'to-do')|list|length }}</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">Task Details</div>
+        {% if tasks %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Task</th>
+                    <th>Assigned To</th>
+                    <th>Due Date</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in tasks %}
+                <tr>
+                    <td>{{ task.title }}</td>
+                    <td>{{ task.assigned_to.username if task.assigned_to else 'Unassigned' }}</td>
+                    <td>{{ task.due_date | formatdate if task.due_date else 'Not set' }}</td>
+                    <td>
+                        <span class="status priority-{{ task.priority }}">
+                            {{ task.priority|capitalize }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status status-{{ task.status|replace('-', '') }}">
+                            {{ task.status|replace('-', ' ')|capitalize }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No tasks have been created for this project.</p>
+        {% endif %}
+    </div>
+    
+    <div class="footer">
+        <p>This report was generated from the Employee Management System.</p>
+        <p>© {{ now.year }} Employee Management System</p>
+    </div>
+</body>
+</html>

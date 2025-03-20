@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payslip - {{ payroll.employee.full_name }}</title>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #fff;
+            color: #333;
+            font-size: 12pt;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+        .company-name {
+            font-size: 24pt;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .payslip-title {
+            font-size: 18pt;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        .payroll-id {
+            font-size: 10pt;
+            color: #777;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        .employee-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .info-group {
+            margin-bottom: 15px;
+        }
+        .info-label {
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        .info-value {
+            color: #555;
+        }
+        .payment-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .earnings-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .earnings-table th, .earnings-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .earnings-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .earnings-table .amount {
+            text-align: right;
+        }
+        .net-pay {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 10pt;
+            color: #777;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+        .signature {
+            margin-top: 40px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+        }
+        .signature-line {
+            border-top: 1px solid #333;
+            margin-top: 50px;
+            padding-top: 5px;
+            text-align: center;
+            font-size: 11pt;
+        }
+        @media print {
+            body {
+                padding: 0;
+                font-size: 12pt;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="company-name">Employee Management System</div>
+            <div class="payslip-title">PAYSLIP</div>
+            <div class="payroll-id">Payroll ID: {{ payroll.id }}</div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">Employee Information</div>
+            <div class="employee-info">
+                <div>
+                    <div class="info-group">
+                        <div class="info-label">Employee Name</div>
+                        <div class="info-value">{{ payroll.employee.full_name }}</div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">Employee ID</div>
+                        <div class="info-value">{{ payroll.employee.id }}</div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">Department</div>
+                        <div class="info-value">{{ payroll.employee.department }}</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="info-group">
+                        <div class="info-label">Position</div>
+                        <div class="info-value">{{ payroll.employee.position }}</div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">Hire Date</div>
+                        <div class="info-value">{{ payroll.employee.hire_date|formatdate }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">Payment Information</div>
+            <div class="payment-info">
+                <div class="info-group">
+                    <div class="info-label">Pay Period</div>
+                    <div class="info-value">{{ payroll.pay_period_start|formatdate }} to {{ payroll.pay_period_end|formatdate }}</div>
+                </div>
+                <div class="info-group">
+                    <div class="info-label">Payment Date</div>
+                    <div class="info-value">{{ payroll.payment_date|formatdate }}</div>
+                </div>
+                <div class="info-group">
+                    <div class="info-label">Payment Status</div>
+                    <div class="info-value">{{ payroll.status|capitalize }}</div>
+                </div>
+            </div>
+            
+            <table class="earnings-table">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th class="amount">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Base Salary</td>
+                        <td class="amount">${{ "%.2f"|format(payroll.base_salary) }}</td>
+                    </tr>
+                    <tr>
+                        <td>Bonus</td>
+                        <td class="amount">${{ "%.2f"|format(payroll.bonus) }}</td>
+                    </tr>
+                    <tr>
+                        <td>Gross Pay</td>
+                        <td class="amount">${{ "%.2f"|format(payroll.base_salary + payroll.bonus) }}</td>
+                    </tr>
+                    <tr>
+                        <td>Deductions</td>
+                        <td class="amount">-${{ "%.2f"|format(payroll.deductions) }}</td>
+                    </tr>
+                    <tr class="net-pay">
+                        <td>Net Pay</td>
+                        <td class="amount">${{ "%.2f"|format(payroll.net_pay) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">Notes</div>
+            <p>This is an official document indicating your salary payment for the specified period. Please review all details and contact the HR department if you have any questions or concerns.</p>
+        </div>
+        
+        <div class="signature">
+            <div class="signature-line">Employee Signature</div>
+            <div class="signature-line">HR Manager Signature</div>
+        </div>
+        
+        <div class="footer">
+            <p>This document is automatically generated and does not require a signature to be considered valid.</p>
+            <p>© {{ payroll.payment_date.year }} Employee Management System</p>
+        </div>
+    </div>
+</body>
+</html>

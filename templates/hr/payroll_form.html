@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Employee Management System{% endblock %}
+
+{% block header %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('hr.new_payroll') }}" id="payrollForm">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        <label for="employee_id" class="form-label">Employee*</label>
+                        {{ form.employee_id(class="form-select", id="employee_id") }}
+                        {% if form.employee_id.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.employee_id.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="pay_period_start" class="form-label">Pay Period Start*</label>
+                            {{ form.pay_period_start(class="form-control", id="pay_period_start", type="date") }}
+                            {% if form.pay_period_start.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.pay_period_start.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="pay_period_end" class="form-label">Pay Period End*</label>
+                            {{ form.pay_period_end(class="form-control", id="pay_period_end", type="date") }}
+                            {% if form.pay_period_end.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.pay_period_end.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="payment_date" class="form-label">Payment Date*</label>
+                        {{ form.payment_date(class="form-control", id="payment_date", type="date") }}
+                        {% if form.payment_date.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.payment_date.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="base_salary" class="form-label">Base Salary ($)</label>
+                            <input type="number" class="form-control" id="base_salary" readonly>
+                            <div class="form-text">Employee's base salary (auto-filled).</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="bonus" class="form-label">Bonus ($)</label>
+                            {{ form.bonus(class="form-control", id="bonus") }}
+                            {% if form.bonus.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.bonus.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="deductions" class="form-label">Deductions ($)</label>
+                            {{ form.deductions(class="form-control", id="deductions") }}
+                            {% if form.deductions.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.deductions.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="net_pay" class="form-label">Net Pay ($)</label>
+                        <input type="number" class="form-control bg-dark" id="net_pay" readonly>
+                        <div class="form-text">Calculated as: Base Salary + Bonus - Deductions</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="status" class="form-label">Status*</label>
+                        {{ form.status(class="form-select", id="status") }}
+                        {% if form.status.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.status.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('hr.payroll') }}" class="btn btn-secondary me-md-2">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> {{ form.submit.label.text }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const employeeSelect = document.getElementById('employee_id');
+        const baseSalaryInput = document.getElementById('base_salary');
+        const bonusInput = document.getElementById('bonus');
+        const deductionsInput = document.getElementById('deductions');
+        const netPayInput = document.getElementById('net_pay');
+        
+        // Employee salaries data (populate with employee IDs and their salaries)
+        const employeeSalaries = {};
+        
+        // Fetch employee salary when employee is selected
+        employeeSelect.addEventListener('change', async function() {
+            const employeeId = this.value;
+            
+            if (!employeeId) {
+                baseSalaryInput.value = '';
+                calculateNetPay();
+                return;
+            }
+            
+            // If we already have the salary cached, use it
+            if (employeeSalaries[employeeId]) {
+                baseSalaryInput.value = employeeSalaries[employeeId];
+                calculateNetPay();
+                return;
+            }
+            
+            // Otherwise fetch it from the server
+            try {
+                const response = await fetch(`/hr/employees/${employeeId}`);
+                if (response.ok) {
+                    const employeeData = await response.json();
+                    baseSalaryInput.value = employeeData.salary;
+                    employeeSalaries[employeeId] = employeeData.salary;
+                    calculateNetPay();
+                } else {
+                    console.error('Failed to fetch employee data');
+                    baseSalaryInput.value = '';
+                }
+            } catch (error) {
+                console.error('Error fetching employee data:', error);
+                baseSalaryInput.value = '';
+            }
+        });
+        
+        // Calculate net pay whenever inputs change
+        function calculateNetPay() {
+            const baseSalary = parseFloat(baseSalaryInput.value) || 0;
+            const bonus = parseFloat(bonusInput.value) || 0;
+            const deductions = parseFloat(deductionsInput.value) || 0;
+            
+            const netPay = baseSalary + bonus - deductions;
+            netPayInput.value = netPay.toFixed(2);
+        }
+        
+        bonusInput.addEventListener('input', calculateNetPay);
+        deductionsInput.addEventListener('input', calculateNetPay);
+        
+        // Date validation
+        const payPeriodStartInput = document.getElementById('pay_period_start');
+        const payPeriodEndInput = document.getElementById('pay_period_end');
+        const paymentDateInput = document.getElementById('payment_date');
+        
+        payPeriodEndInput.addEventListener('change', function() {
+            if (payPeriodStartInput.value && this.value) {
+                const startDate = new Date(payPeriodStartInput.value);
+                const endDate = new Date(this.value);
+                
+                if (endDate < startDate) {
+                    alert('Pay period end date cannot be earlier than start date');
+                    this.value = '';
+                }
+            }
+        });
+        
+        paymentDateInput.addEventListener('change', function() {
+            if (payPeriodEndInput.value && this.value) {
+                const endDate = new Date(payPeriodEndInput.value);
+                const paymentDate = new Date(this.value);
+                
+                if (paymentDate < endDate) {
+                    alert('Payment date should be on or after the pay period end date');
+                }
+            }
+        });
+        
+        // Initial calculation
+        calculateNetPay();
+        
+        // Trigger change event for employee select if value is already set
+        if (employeeSelect.value) {
+            employeeSelect.dispatchEvent(new Event('change'));
+        }
+    });
+</script>
+{% endblock %}

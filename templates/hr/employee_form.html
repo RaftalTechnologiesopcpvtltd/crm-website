@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Employee Management System{% endblock %}
+
+{% block header %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('hr.edit_employee', id=employee.id) if employee else url_for('hr.new_employee') }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        <label for="user_id" class="form-label">User Account*</label>
+                        {{ form.user_id(class="form-select", id="user_id") }}
+                        {% if form.user_id.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.user_id.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <div class="form-text">Link this employee record to a user account.</div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="first_name" class="form-label">First Name*</label>
+                            {{ form.first_name(class="form-control", id="first_name") }}
+                            {% if form.first_name.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.first_name.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="last_name" class="form-label">Last Name*</label>
+                            {{ form.last_name(class="form-control", id="last_name") }}
+                            {% if form.last_name.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.last_name.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="department" class="form-label">Department*</label>
+                            {{ form.department(class="form-control", id="department") }}
+                            {% if form.department.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.department.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="position" class="form-label">Position*</label>
+                            {{ form.position(class="form-control", id="position") }}
+                            {% if form.position.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.position.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="hire_date" class="form-label">Hire Date*</label>
+                            {{ form.hire_date(class="form-control", id="hire_date", type="date") }}
+                            {% if form.hire_date.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.hire_date.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="salary" class="form-label">Salary ($)*</label>
+                            {{ form.salary(class="form-control", id="salary") }}
+                            {% if form.salary.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.salary.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="phone" class="form-label">Phone</label>
+                            {{ form.phone(class="form-control", id="phone") }}
+                            {% if form.phone.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.phone.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="address" class="form-label">Address</label>
+                        {{ form.address(class="form-control", id="address", rows=3) }}
+                        {% if form.address.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.address.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('hr.employee_detail', id=employee.id) if employee else url_for('hr.employees') }}" class="btn btn-secondary me-md-2">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> {{ form.submit.label.text }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Validate salary input (positive numbers only)
+        const salaryInput = document.getElementById('salary');
+        
+        salaryInput.addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            if (value <= 0) {
+                this.setCustomValidity('Salary must be greater than zero');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    });
+</script>
+{% endblock %}
