@@ -5,9 +5,12 @@
 {% block header %}Dashboard{% endblock %}
 
 {% block content %}
-<!-- HTMX SSE Connection for Real-time Updates -->
-<div hx-ext="sse" sse-connect="{{ url_for('project_management.dashboard_stream') }}">
-    <!-- This div will be updated in real-time with server-sent events -->
+<!-- Global HTMX polling for real-time dashboard updates -->
+<div id="dashboard-updater" 
+     hx-get="{{ url_for('project_management.dashboard_updates') }}" 
+     hx-trigger="load, every 10s" 
+     hx-swap="none">
+</div>
 <!-- Animated Welcome Banner -->
 <div class="row mb-4">
     <div class="col-12">
@@ -150,14 +153,14 @@
                     <div class="col-md-6 mb-3">
                         <div class="stat-card bg-dark slide-in-left">
                             <i class="fas fa-project-diagram text-primary"></i>
-                            <h2 class="counter" id="total-projects-count" sse-swap="project_count">{{ total_projects }}</h2>
+                            <h2 class="counter" id="total-projects-count">{{ total_projects }}</h2>
                             <p>Total Projects</p>
                         </div>
                     </div>
                     <div class="col-md-6 mb-3">
                         <div class="stat-card bg-dark slide-in-right">
                             <i class="fas fa-check-circle text-success"></i>
-                            <h2 class="counter" id="completed-projects-count" sse-swap="completed_projects">{{ completed_projects }}</h2>
+                            <h2 class="counter" id="completed-projects-count">{{ completed_projects }}</h2>
                             <p>Completed Projects</p>
                         </div>
                     </div>
@@ -191,14 +194,14 @@
                     <div class="col-md-6 mb-3">
                         <div class="stat-card bg-dark slide-in-left">
                             <i class="fas fa-tasks text-primary"></i>
-                            <h2 class="counter" id="total-tasks-count" sse-swap="task_count">{{ total_tasks }}</h2>
+                            <h2 class="counter" id="total-tasks-count">{{ total_tasks }}</h2>
                             <p>Total Tasks</p>
                         </div>
                     </div>
                     <div class="col-md-6 mb-3">
                         <div class="stat-card bg-dark slide-in-right">
                             <i class="fas fa-check text-success"></i>
-                            <h2 class="counter" id="completed-tasks-count" sse-swap="completed_tasks">{{ completed_tasks }}</h2>
+                            <h2 class="counter" id="completed-tasks-count">{{ completed_tasks }}</h2>
                             <p>Completed Tasks</p>
                         </div>
                     </div>
@@ -352,7 +355,7 @@
                             <div class="stats-item">
                                 <i class="fas fa-calendar-alt text-success"></i>
                                 <span class="stats-label">Pending Leaves:</span>
-                                <span class="stats-value" id="pending-leaves" sse-swap="department_data.hr.pending_leaves">{{ department_data.hr.pending_leaves }}</span>
+                                <span class="stats-value" id="pending-leaves">{{ department_data.hr.pending_leaves }}</span>
                             </div>
                             <div class="stats-item">
                                 <i class="fas fa-clock text-info"></i>
@@ -394,7 +397,7 @@
                                     <i class="fas fa-calendar-alt widget-icon bg-info"></i>
                                     <div class="widget-content">
                                         <h5>Leave Management</h5>
-                                        <p>{% if department_data.hr.pending_leaves > 0 %}<span class="badge bg-warning"><span id="pending-leaves-count" sse-swap="department_data.hr.pending_leaves">{{ department_data.hr.pending_leaves }}</span> pending</span>{% else %}Manage leave requests{% endif %}</p>
+                                        <p>{% if department_data.hr.pending_leaves > 0 %}<span class="badge bg-warning"><span id="pending-leaves-count">{{ department_data.hr.pending_leaves }}</span> pending</span>{% else %}Manage leave requests{% endif %}</p>
                                         <a href="{{ url_for('hr.leaves') }}" class="btn btn-sm btn-info">Manage Leaves</a>
                                     </div>
                                 </div>
@@ -487,7 +490,7 @@
                             <div class="stats-item">
                                 <i class="fas fa-hourglass-half text-warning"></i>
                                 <span class="stats-label">Pending Payments:</span>
-                                <span class="stats-value" id="pending-payments" sse-swap="department_data.accounting.pending_payments">{{ department_data.accounting.pending_payments }}</span>
+                                <span class="stats-value" id="pending-payments">{{ department_data.accounting.pending_payments }}</span>
                             </div>
                             <div class="stats-item">
                                 <i class="fas fa-money-bill-alt text-danger"></i>
@@ -580,7 +583,7 @@
                             <div class="stats-item">
                                 <i class="fas fa-exclamation-triangle text-danger"></i>
                                 <span class="stats-label">Urgent Tasks:</span>
-                                <span class="stats-value" id="urgent-tasks" sse-swap="department_data.developer.urgent_tasks">{{ department_data.developer.urgent_tasks }}</span>
+                                <span class="stats-value" id="urgent-tasks">{{ department_data.developer.urgent_tasks }}</span>
                             </div>
                             <div class="stats-item">
                                 <i class="fas fa-check-double text-success"></i>
