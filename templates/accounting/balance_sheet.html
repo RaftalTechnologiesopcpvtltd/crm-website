@@ -126,8 +126,11 @@
                     <button class="btn btn-success" onclick="window.print()">
                         <i class="fas fa-print me-1"></i> Print
                     </button>
-                    <a href="#" class="btn btn-primary">
+                    <a href="{{ url_for('accounting.balance_sheet', as_of_date=as_of_date|string, export='pdf') }}" class="btn btn-primary">
                         <i class="fas fa-file-pdf me-1"></i> Export PDF
+                    </a>
+                    <a href="{{ url_for('accounting.balance_sheet', as_of_date=as_of_date|string, export='csv') }}" class="btn btn-info">
+                        <i class="fas fa-file-csv me-1"></i> Export CSV
                     </a>
                 </div>
             </div>

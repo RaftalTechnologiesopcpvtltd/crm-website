@@ -636,6 +636,7 @@ def general_ledger():
 def balance_sheet():
     """Display the balance sheet"""
     as_of_date_str = request.args.get('as_of_date')
+    export_format = request.args.get('export')
     as_of_date = None
     
     if as_of_date_str:
@@ -693,6 +694,19 @@ def balance_sheet():
     total_equity = sum(account.balance_amount for account in equity_accounts)
     total_liabilities_equity = total_liabilities + total_equity
     
+    # Handle export requests
+    if export_format in ['csv', 'pdf']:
+        return export_balance_sheet(
+            asset_accounts, 
+            liability_accounts, 
+            equity_accounts, 
+            total_assets, 
+            total_liabilities, 
+            total_equity, 
+            as_of_date, 
+            export_format
+        )
+    
     return render_template(
         'accounting/balance_sheet.html',
         title='Balance Sheet',
@@ -712,6 +726,7 @@ def income_statement():
     """Display the income statement (profit and loss)"""
     from_date_str = request.args.get('from_date')
     to_date_str = request.args.get('to_date')
+    export_format = request.args.get('export')
     from_date = None
     to_date = None
     
@@ -772,6 +787,19 @@ def income_statement():
     total_revenue = sum(account.balance_amount for account in revenue_accounts)
     total_expenses = sum(account.balance_amount for account in expense_accounts)
     net_income = total_revenue - total_expenses
+    
+    # Handle export requests
+    if export_format in ['csv', 'pdf']:
+        return export_income_statement(
+            revenue_accounts, 
+            expense_accounts, 
+            total_revenue, 
+            total_expenses, 
+            net_income, 
+            from_date, 
+            to_date, 
+            export_format
+        )
     
     return render_template(
         'accounting/income_statement.html',
@@ -969,6 +997,23 @@ def cash_flow_statement():
     operating_activities.sort(key=lambda x: x['date'])
     investing_activities.sort(key=lambda x: x['date'])
     financing_activities.sort(key=lambda x: x['date'])
+    
+    # Handle export requests
+    if export_format in ['csv', 'pdf']:
+        return export_cash_flow_statement(
+            operating_activities,
+            investing_activities,
+            financing_activities,
+            total_operating,
+            total_investing,
+            total_financing,
+            beginning_cash,
+            ending_cash,
+            net_change,
+            from_date,
+            to_date,
+            export_format
+        )
     
     return render_template(
         'accounting/cash_flow.html',
