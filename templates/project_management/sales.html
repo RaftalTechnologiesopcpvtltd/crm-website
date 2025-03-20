@@ -31,7 +31,11 @@
                             <tr>
                                 <td>
                                     <a href="{{ url_for('project_management.project_detail', id=sale.project_id) }}">
-                                        {{ sale.project.name }}
+                                        {% if sale.project_sale %}
+                                            {{ sale.project_sale.name }}
+                                        {% else %}
+                                            Project #{{ sale.project_id }}
+                                        {% endif %}
                                     </a>
                                 </td>
                                 <td>{{ sale.currency }} {{ sale.total_amount }}</td>
@@ -70,7 +74,13 @@
                                                 </div>
                                                 <div class="modal-body">
                                                     <p>Are you sure you want to close this sales record?</p>
-                                                    <p>Project: <strong>{{ sale.project.name }}</strong></p>
+                                                    <p>Project: <strong>
+                                                        {% if sale.project_sale %}
+                                                            {{ sale.project_sale.name }}
+                                                        {% else %}
+                                                            Project #{{ sale.project_id }}
+                                                        {% endif %}
+                                                    </strong></p>
                                                     <p>Total Amount: <strong>{{ sale.currency }} {{ sale.total_amount }}</strong></p>
                                                     <p>Received Amount: <strong>{{ sale.currency }} {{ sale.received_amount }}</strong></p>
                                                     <p>Current Difference: <strong>{{ sale.currency }} {{ sale.difference }}</strong></p>
