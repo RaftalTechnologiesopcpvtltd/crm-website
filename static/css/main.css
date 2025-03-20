@@ -198,10 +198,11 @@
 .welcome-card {
     overflow: hidden;
     border: none;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    background: linear-gradient(135deg, #4158D0, #C850C0, #FFCC70);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(135deg, #6b17e6, #5e02ff, #bb00ff);
     background-size: 300% 300%;
     animation: gradient-shift 15s ease infinite;
+    color: white;
 }
 
 .welcome-container {
@@ -250,10 +251,13 @@
     align-items: center;
     padding: 1rem;
     border-radius: 0.5rem;
-    background-color: #f8f9fa;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #6b17e6, #5e02ff, #bb00ff);
+    background-size: 200% 200%;
+    animation: gradient-shift 15s ease infinite;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
     height: 100%;
     opacity: 0;
+    color: white;
 }
 
 .insight-icon {
@@ -265,6 +269,8 @@
     border-radius: 50%;
     margin-right: 1rem;
     flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
 }
 
 /* Mobile Optimizations */
@@ -332,6 +338,62 @@
     }
 }
 
+/* Form Controls */
+.form-control, .form-select {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.form-control:focus, .form-select:focus {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: white;
+    box-shadow: 0 0 0 0.25rem rgba(107, 23, 230, 0.4);
+}
+
+.form-control::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Buttons */
+.btn-primary {
+    background: linear-gradient(135deg, #6b17e6, #5e02ff);
+    border: none;
+}
+
+.btn-primary:hover, .btn-primary:focus {
+    background: linear-gradient(135deg, #5e02ff, #bb00ff);
+    border: none;
+    box-shadow: 0 0 0 0.25rem rgba(107, 23, 230, 0.4);
+}
+
+.btn-secondary {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-secondary:hover, .btn-secondary:focus {
+    background-color: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Dropdown Menus */
+.dropdown-menu {
+    background: linear-gradient(135deg, #6b17e6, #5e02ff, #bb00ff);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.3);
+}
+
+.dropdown-item {
+    color: white;
+}
+
+.dropdown-item:hover, .dropdown-item:focus {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
 /* Dark mode optimizations */
 @media (prefers-color-scheme: dark) {
     .insight-card {
@@ -351,19 +413,20 @@
 .insight-title {
     font-size: 0.9rem;
     margin-bottom: 0.5rem;
-    color: #666;
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .insight-data {
     font-size: 1.8rem;
     font-weight: bold;
     margin-bottom: 0;
-    color: #333;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .insight-detail {
     font-size: 0.8rem;
-    color: #666;
+    color: rgba(255, 255, 255, 0.7);
     margin-bottom: 0.5rem;
 }
 
@@ -526,9 +589,12 @@
 
 /* Main Body Background */
 body {
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background: linear-gradient(135deg, #6b17e6, #5e02ff, #bb00ff);
+    background-size: 300% 300%;
+    animation: gradient-shift 20s ease infinite;
     background-attachment: fixed;
     min-height: 100vh;
+    color: white;
 }
 
 /* Card backgrounds */
@@ -745,15 +811,24 @@ body {
     border-color: rgba(255, 255, 255, 0.2);
 }
 
-/* Department-specific colors */
+/* Department-specific colors with purple gradient */
 .bg-hr {
-    background-color: #17a2b8;
+    background: linear-gradient(135deg, #6b17e6, #5e02ff, #bb00ff);
+    background-size: 200% 200%;
+    animation: gradient-shift 15s ease infinite;
+    color: white;
 }
 
 .bg-accounting {
-    background-color: #28a745;
+    background: linear-gradient(135deg, #6b17e6, #5e02ff, #bb00ff);
+    background-size: 200% 200%;
+    animation: gradient-shift 15s ease infinite;
+    color: white;
 }
 
 .bg-developer {
-    background-color: #007bff;
+    background: linear-gradient(135deg, #6b17e6, #5e02ff, #bb00ff);
+    background-size: 200% 200%;
+    animation: gradient-shift 15s ease infinite;
+    color: white;
 }
