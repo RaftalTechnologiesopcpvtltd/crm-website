@@ -97,7 +97,7 @@ def get_time_remaining(due_date, start_date=None):
     
     Args:
         due_date: The due date to compare against current time
-        start_date: Optional start date (order creation date). If provided, 
+        start_date: Optional start date (project creation date). If provided, 
                    the percentage completion will be calculated from this date
     
     Returns:
@@ -117,7 +117,7 @@ def get_time_remaining(due_date, start_date=None):
     
     now = datetime.now().replace(microsecond=0)
     
-    # Convert date to datetime at end of day if it's just a date
+    # Convert date to datetime objects for calculation
     if isinstance(due_date, datetime):
         target_date = due_date
     else:
@@ -138,14 +138,42 @@ def get_time_remaining(due_date, start_date=None):
         prefix = "Time left: "
         
         # Determine color based on urgency
-        if time_diff.days > 5:
-            css_class = "text-success"
-        elif time_diff.days >= 2:
-            css_class = "text-info"
-        elif time_diff.days >= 1:
-            css_class = "text-warning"
+        # Percentage-based coloring if start_date is provided
+        if start_date:
+            # Convert to datetime object if needed
+            if not isinstance(start_date, datetime):
+                start_datetime = datetime.combine(start_date, datetime.min.time())
+            else:
+                start_datetime = start_date
+                
+            # Calculate total project duration and time elapsed percentage
+            total_duration = (target_date - start_datetime).total_seconds()
+            elapsed_time = (now - start_datetime).total_seconds()
+            
+            if total_duration > 0:
+                percent_elapsed = (elapsed_time / total_duration) * 100
+                
+                # Color based on percentage of time elapsed relative to total timeline
+                if percent_elapsed < 50:
+                    css_class = "text-success"  # First half of timeline
+                elif percent_elapsed < 75:
+                    css_class = "text-info"     # Between 50-75% of timeline
+                elif percent_elapsed < 90:
+                    css_class = "text-warning"  # Between 75-90% of timeline
+                else:
+                    css_class = "text-danger"   # Last 10% of timeline
+            else:
+                css_class = "text-danger"
         else:
-            css_class = "text-danger"
+            # Traditional days-based coloring if no start_date
+            if time_diff.days > 5:
+                css_class = "text-success"
+            elif time_diff.days >= 2:
+                css_class = "text-info"
+            elif time_diff.days >= 1:
+                css_class = "text-warning"
+            else:
+                css_class = "text-danger"
     
     # Calculate days, hours, minutes
     days = time_diff.days

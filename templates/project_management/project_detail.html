@@ -160,12 +160,14 @@
     
     <div class="col-md-4">
         {% if project.end_date %}
-        <div class="card mb-3">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Time Left to Deliver</h5>
+        <div class="card mb-3 card-gradient-purple">
+            <div class="card-header border-0">
+                <h5 class="card-title mb-0 text-white">Time Left to Deliver</h5>
             </div>
             <div class="card-body">
-                <div class="time-blocks d-flex justify-content-center align-items-center" data-deadline="{{ project.end_date }}">
+                <div class="time-blocks d-flex justify-content-center align-items-center" 
+                     data-deadline="{{ project.end_date }}"
+                     data-start-date="{{ project.start_date }}">
                     <div class="time-block">
                         <div class="time-value days">00</div>
                         <div class="time-label">Days</div>
@@ -185,6 +187,17 @@
                         <div class="time-value seconds">00</div>
                         <div class="time-label">Seconds</div>
                     </div>
+                </div>
+                
+                <div class="progress mt-4 mb-1" style="height: 10px;" title="Project Timeline Progress">
+                    <div class="progress-bar" role="progressbar" 
+                         style="width: 0%;" 
+                         aria-valuenow="0" 
+                         aria-valuemin="0" 
+                         aria-valuemax="100"></div>
+                </div>
+                <div class="text-end">
+                    <small class="text-light progress-text">Loading progress...</small>
                 </div>
             </div>
         </div>
