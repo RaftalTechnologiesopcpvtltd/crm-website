@@ -342,7 +342,22 @@ def new_project():
 @login_required
 def project_detail(id):
     project = Project.query.get_or_404(id)
-    tasks = Task.query.filter_by(project_id=id).order_by(Task.due_date.asc()).all()
+    
+    # Check if user has access to this project
+    is_admin_or_accounting = current_user.is_admin or current_user.department == 'accounting'
+    has_task_in_project = Task.query.filter_by(project_id=id, user_id=current_user.id).first() is not None
+    
+    # Only allow access if user is admin/accounting or has a task in this project
+    if not is_admin_or_accounting and not has_task_in_project:
+        flash('Access denied. You can only view projects you are assigned to.', 'danger')
+        return redirect(url_for('project_management.projects'))
+    
+    # For regular users, only show tasks assigned to them
+    if not is_admin_or_accounting and current_user.department == 'developer':
+        tasks = Task.query.filter_by(project_id=id, user_id=current_user.id).order_by(Task.due_date.asc()).all()
+    else:
+        tasks = Task.query.filter_by(project_id=id).order_by(Task.due_date.asc()).all()
+        
     return render_template('project_management/project_detail.html', project=project, tasks=tasks)
 
 @project_bp.route('/projects/<int:id>/edit', methods=['GET', 'POST'])
@@ -556,6 +571,16 @@ def update_task_status(id, status):
 @login_required
 def project_milestones(project_id):
     project = Project.query.get_or_404(project_id)
+    
+    # Check if user has access to this project
+    is_admin_or_accounting = current_user.is_admin or current_user.department == 'accounting'
+    has_task_in_project = Task.query.filter_by(project_id=project_id, user_id=current_user.id).first() is not None
+    
+    # Only allow access if user is admin/accounting or has a task in this project
+    if not is_admin_or_accounting and not has_task_in_project:
+        flash('Access denied. You can only view milestones for projects you are assigned to.', 'danger')
+        return redirect(url_for('project_management.projects'))
+    
     milestones = ProjectMilestone.query.filter_by(project_id=project_id).order_by(ProjectMilestone.due_date.asc()).all()
     return render_template('project_management/milestones.html', project=project, milestones=milestones)
 
@@ -586,6 +611,17 @@ def new_milestone(project_id):
 @login_required
 def edit_milestone(id):
     milestone = ProjectMilestone.query.get_or_404(id)
+    project_id = milestone.project_id
+    
+    # Check if user has access to this project
+    is_admin_or_accounting = current_user.is_admin or current_user.department == 'accounting'
+    has_task_in_project = Task.query.filter_by(project_id=project_id, user_id=current_user.id).first() is not None
+    
+    # Only allow access if user is admin/accounting or has a task in this project
+    if not is_admin_or_accounting and not has_task_in_project:
+        flash('Access denied. You can only edit milestones for projects you are assigned to.', 'danger')
+        return redirect(url_for('project_management.projects'))
+    
     form = ProjectMilestoneForm(obj=milestone)
     
     if form.validate_on_submit():
@@ -683,6 +719,16 @@ def payments():
 @login_required
 def project_payments(project_id):
     project = Project.query.get_or_404(project_id)
+    
+    # Check if user has access to this project
+    is_admin_or_accounting = current_user.is_admin or current_user.department == 'accounting'
+    has_task_in_project = Task.query.filter_by(project_id=project_id, user_id=current_user.id).first() is not None
+    
+    # Only allow access if user is admin/accounting or has a task in this project
+    if not is_admin_or_accounting and not has_task_in_project:
+        flash('Access denied. You can only view payments for projects you are assigned to.', 'danger')
+        return redirect(url_for('project_management.projects'))
+    
     payments = ProjectPayment.query.filter_by(project_id=project_id).order_by(ProjectPayment.payment_date.desc()).all()
     return render_template('project_management/project_payments.html', project=project, payments=payments)
 
