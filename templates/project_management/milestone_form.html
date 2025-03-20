@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}{% if milestone %}Edit Milestone{% else %}New Milestone{% endif %}{% endblock %}
+
+{% block header %}
+  {% if milestone %}Edit Milestone{% else %}New Milestone{% endif %}
+  {% if project %}
+    <span class="text-muted">| {{ project.name }}</span>
+  {% endif %}
+{% endblock %}
+
+{% block page_actions %}
+{% if project %}
+<a href="{{ url_for('project_management.project_detail', id=project.id) }}" class="btn btn-sm btn-secondary">
+    <i class="fas fa-arrow-left me-1"></i> Back to Project
+</a>
+{% else %}
+<a href="{{ url_for('project_management.projects') }}" class="btn btn-sm btn-secondary">
+    <i class="fas fa-arrow-left me-1"></i> Back to Projects
+</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.name.label(class="form-label") }}
+                        {% if form.name.errors %}
+                            {{ form.name(class="form-control is-invalid") }}
+                            {% for error in form.name.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        {% else %}
+                            {{ form.name(class="form-control") }}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {% if form.description.errors %}
+                            {{ form.description(class="form-control is-invalid", rows=4) }}
+                            {% for error in form.description.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        {% else %}
+                            {{ form.description(class="form-control", rows=4) }}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form.due_date.label(class="form-label") }}
+                            {% if form.due_date.errors %}
+                                {{ form.due_date(class="form-control is-invalid", type="date") }}
+                                {% for error in form.due_date.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            {% else %}
+                                {{ form.due_date(class="form-control", type="date") }}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.amount.label(class="form-label") }}
+                            {% if form.amount.errors %}
+                                {{ form.amount(class="form-control is-invalid") }}
+                                {% for error in form.amount.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    {{ form.amount(class="form-control") }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.status.label(class="form-label") }}
+                        {% if form.status.errors %}
+                            {{ form.status(class="form-select is-invalid") }}
+                            {% for error in form.status.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        {% else %}
+                            {{ form.status(class="form-select") }}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="text-end">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
