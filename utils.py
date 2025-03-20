@@ -91,15 +91,18 @@ def get_status_badge_class(status):
     else:
         return 'bg-secondary'
 
-def get_time_remaining(due_date):
+def get_time_remaining(due_date, start_date=None):
     """
     Calculate time remaining until due date and return formatted string
     
     Args:
         due_date: The due date to compare against current time
+        start_date: Optional start date (order creation date). If provided, 
+                   the percentage completion will be calculated from this date
     
     Returns:
-        Dictionary with 'time_str', 'days', 'hours', 'minutes', and 'is_overdue' values
+        Dictionary with 'time_str', 'days', 'hours', 'minutes', 'is_overdue', 
+        'css_class', and optionally 'percent_complete' values
     """
     if not due_date:
         return {
@@ -108,7 +111,8 @@ def get_time_remaining(due_date):
             'hours': 0,
             'minutes': 0,
             'is_overdue': False,
-            'css_class': 'text-muted'
+            'css_class': 'text-muted',
+            'percent_complete': 0
         }
     
     now = datetime.now().replace(microsecond=0)
@@ -156,7 +160,7 @@ def get_time_remaining(due_date):
     else:
         time_str = f"{prefix}{minutes}m"
     
-    return {
+    result = {
         'time_str': time_str,
         'days': days,
         'hours': hours,
@@ -164,6 +168,27 @@ def get_time_remaining(due_date):
         'is_overdue': is_overdue,
         'css_class': css_class
     }
+    
+    # Calculate percentage completion if start_date is provided
+    if start_date:
+        # Convert to datetime objects for calculation
+        if not isinstance(start_date, datetime):
+            start_datetime = datetime.combine(start_date, datetime.min.time())
+        else:
+            start_datetime = start_date
+        
+        # Calculate total duration and elapsed time
+        total_duration = (target_date - start_datetime).total_seconds()
+        elapsed_time = (now - start_datetime).total_seconds()
+        
+        # Avoid division by zero and negative percentages
+        if total_duration > 0:
+            percent_complete = min(max(0, (elapsed_time / total_duration) * 100), 100)
+            result['percent_complete'] = round(percent_complete, 1)
+        else:
+            result['percent_complete'] = 100 if is_overdue else 0
+    
+    return result
 
 def generate_financial_report_csv(data, headers, title, filename):
     """
