@@ -97,6 +97,20 @@
                     <div class="mb-3">
                         {{ form.milestone_id.label(class="form-label") }}
                         {{ form.milestone_id(class="form-select") }}
+                        {% if form.milestone_id.data %}
+                        {% set milestone = form.milestone_id.choices|selectattr('0', 'equalto', form.milestone_id.data|string)|first %}
+                        {% set milestone_obj = form.milestone_id.query.filter_by(id=form.milestone_id.data).first() %}
+                        {% if milestone_obj %}
+                        <div class="mt-2">
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: {{ milestone_obj.completion_percentage }}%;" 
+                                     aria-valuenow="{{ milestone_obj.completion_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                    {{ milestone_obj.completion_percentage }}% Complete
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endif %}
                     </div>
 
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
