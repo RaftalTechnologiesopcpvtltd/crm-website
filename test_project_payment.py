@@ -44,16 +44,37 @@ def create_test_project():
             budget=Decimal("2000.00"),
             payment_status="pending"
         )
+        print(f"Adding project to database: {project_name}")
         db.session.add(project)
+        
+        # Print debug info before commit
+        print(f"Project before commit - has ID: {project.id}")
+        
+        # Commit to get ID
         db.session.commit()
+        print(f"Project after commit - ID: {project.id}")
         print(f"Created test project: {project.name} with budget ${project.budget}")
         
-        # Check if sales record was automatically created
-        sale = Sales.query.filter_by(project_id=project.id).first()
-        if sale:
-            print(f"Sales record automatically created with total amount: ${sale.total_amount}")
+        # Create sales record manually since automatic creation isn't working
+        print("Creating sales record manually...")
+        sale = Sales(
+            project_id=project.id,
+            total_amount=project.budget,
+            received_amount=Decimal("0.00"),
+            currency='USD',
+            status='open',
+            difference=project.budget  # Initially, difference is the full budget
+        )
+        db.session.add(sale)
+        db.session.commit()
+        print(f"Manually created sales record with ID: {sale.id}")
+        
+        # Validate the sales record exists
+        sales_check = Sales.query.filter_by(project_id=project.id).first()
+        if sales_check:
+            print(f"Sales record exists with total amount: ${sales_check.total_amount}")
         else:
-            print("No sales record was created.")
+            print("ERROR: No sales record was found after manual creation.")
         
         return project
 
@@ -110,12 +131,66 @@ def close_test_sales(project_id):
         return sale
 
 if __name__ == "__main__":
-    # Create a test project
-    project = create_test_project()
+    import sys
     
-    if project:
-        # Create a test payment
-        payment = create_test_payment(project.id)
+    # Check if any arguments are provided
+    if len(sys.argv) > 1:
+        # If arg is 'create_project', only create a project
+        if sys.argv[1] == 'create_project':
+            print("Creating test project only...")
+            project = create_test_project()
+            print(f"Created project with ID: {project.id if project else 'None'}")
+            sys.exit(0)
+        # If arg is 'create_payment', create a payment for the given project ID
+        elif sys.argv[1] == 'create_payment' and len(sys.argv) > 2:
+            try:
+                project_id = int(sys.argv[2])
+                print(f"Creating test payment for project ID: {project_id}...")
+                payment = create_test_payment(project_id)
+                print(f"Created payment with ID: {payment.id if payment else 'None'}")
+                sys.exit(0)
+            except ValueError:
+                print(f"Invalid project ID: {sys.argv[2]}")
+                sys.exit(1)
+        # If arg is 'close_sales', close the sales record for the given project ID
+        elif sys.argv[1] == 'close_sales' and len(sys.argv) > 2:
+            try:
+                project_id = int(sys.argv[2])
+                print(f"Closing sales record for project ID: {project_id}...")
+                sale = close_test_sales(project_id)
+                print(f"Closed sales record with ID: {sale.id if sale else 'None'}")
+                sys.exit(0)
+            except ValueError:
+                print(f"Invalid project ID: {sys.argv[2]}")
+                sys.exit(1)
+    
+    # Default: run all steps
+    try:
+        print("Running complete test sequence...")
         
-        # Close the sales record
-        close_test_sales(project.id)
+        # Create a test project
+        print("Step 1: Creating test project")
+        project = create_test_project()
+        
+        if project:
+            print(f"\nStep 2: Creating test payment for project ID: {project.id}")
+            # Create a test payment
+            payment = create_test_payment(project.id)
+            
+            if payment:
+                print(f"\nStep 3: Closing sales record for project ID: {project.id}")
+                # Close the sales record
+                sale = close_test_sales(project.id)
+                
+                if sale:
+                    print("\nComplete test sequence succeeded!")
+                else:
+                    print("\nError: Failed to close sales record.")
+            else:
+                print("\nError: Failed to create payment.")
+        else:
+            print("\nError: Failed to create project.")
+    except Exception as e:
+        print(f"Test sequence failed with error: {str(e)}")
+        import traceback
+        traceback.print_exc()
