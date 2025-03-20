@@ -201,7 +201,7 @@ class ProjectPayment(db.Model):
 class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
-    milestone_id = db.Column(db.Integer, db.ForeignKey('project_milestone.id'), nullable=False)
+    milestone_id = db.Column(db.Integer, db.ForeignKey('project_milestone.id'), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
