@@ -14,6 +14,11 @@
         <a href="{{ url_for('accounting.new_journal_entry') }}" class="btn btn-primary">
             <i class="fas fa-plus"></i> Add Journal Entry
         </a>
+        <div class="alert alert-info mt-3">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Important:</strong> Only journal entries with "DRAFT" status can be edited. 
+            Once posted, journal entries are locked to maintain accounting integrity.
+        </div>
     </div>
     
     <div class="card mb-4">
@@ -62,14 +67,16 @@
                         <td>
                             {% if entry.status == 'DRAFT' %}
                             <a href="{{ url_for('accounting.edit_journal_entry_lines', id=entry.id) }}" class="btn btn-sm btn-primary">
-                                <i class="fas fa-edit"></i> Edit
+                                <i class="fas fa-edit"></i> Edit Lines
                             </a>
+                            {% if entry.lines|length > 0 and entry.is_balanced %}
                             <a href="{{ url_for('accounting.post_journal_entry', id=entry.id) }}" class="btn btn-sm btn-success">
                                 <i class="fas fa-check"></i> Post
                             </a>
+                            {% endif %}
                             {% else %}
                             <a href="{{ url_for('accounting.edit_journal_entry_lines', id=entry.id) }}" class="btn btn-sm btn-info">
-                                <i class="fas fa-eye"></i> View
+                                <i class="fas fa-eye"></i> View Details
                             </a>
                             {% endif %}
                         </td>

@@ -68,10 +68,16 @@
             Journal Entry Lines
         </div>
         <div class="card-body">
-            {% if entry.lines|length == 0 and entry.status == 'DRAFT' %}
+            {% if entry.status != 'DRAFT' %}
             <div class="alert alert-info mb-3">
                 <i class="fas fa-info-circle me-2"></i>
-                You must add at least one line item to your journal entry. Enter debit and credit amounts for each account to record your transaction.
+                This journal entry has been posted and cannot be edited. Only draft entries can be modified.
+            </div>
+            {% elif entry.lines|length == 0 %}
+            <div class="alert alert-warning mb-3">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>No line items yet!</strong> You must add at least one line item to your journal entry. 
+                Enter debit and credit amounts for each account to record your transaction.
             </div>
             {% endif %}
             
@@ -143,13 +149,6 @@
             {% endif %}
             
             <div class="table-responsive">
-                {% if not entry.lines %}
-                <div class="alert alert-warning mb-4">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    <strong>No line items yet!</strong> You need to add at least one line item to this journal entry. 
-                    Use the form above to add debit and credit entries.
-                </div>
-                {% endif %}
                 <table class="table table-striped table-hover">
                     <thead>
                         <tr>
