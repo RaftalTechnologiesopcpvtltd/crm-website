@@ -1,10 +1,10 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from app import db
-from models import Project, Task, User, Employee, ClientUser, ProjectMilestone, ProjectPayment, Account
+from models import Project, Task, User, Employee, ClientUser, ProjectMilestone, ProjectPayment, Account, Sales
 from blueprints.project_management.forms import (
     ProjectForm, TaskForm, ClientUserForm, ProjectMilestoneForm, 
-    ProjectPaymentForm, AccountForm
+    ProjectPaymentForm, AccountForm, SalesForm
 )
 from utils import generate_csv, generate_pdf
 from decimal import Decimal
@@ -182,6 +182,19 @@ def new_project():
             
         db.session.add(project)
         db.session.commit()
+        
+        # Create a Sales record for this project
+        if project.budget:
+            sale = Sales(
+                project_id=project.id,
+                total_amount=project.budget,
+                received_amount=0,
+                currency='USD',
+                status='open',
+                difference=project.budget  # Initially, difference is the full budget
+            )
+            db.session.add(sale)
+            db.session.commit()
         
         flash('Project created successfully!', 'success')
         return redirect(url_for('project_management.project_detail', id=project.id))
@@ -582,6 +595,16 @@ def new_payment():
         if payment.status == 'transferred' or payment.status == 'reconciled':
             project = Project.query.get(payment.project_id)
             project.payment_status = 'transferred'
+            
+            # Update the sales record for this project
+            if payment.amount_received:
+                # Get the sales record for this project
+                sale = Sales.query.filter_by(project_id=project.id).first()
+                if sale:
+                    sale.received_amount += payment.amount_received
+                    sale.calculate_difference()
+                    payment.is_recorded_in_sales = True
+            
             db.session.commit()
         
         flash('Payment record created successfully!', 'success')
@@ -616,6 +639,16 @@ def edit_payment(id):
         if old_status != payment.status and (payment.status == 'transferred' or payment.status == 'reconciled'):
             project = Project.query.get(payment.project_id)
             project.payment_status = 'transferred'
+            
+            # Update the sales record if this is a new transferred payment
+            if payment.amount_received and not payment.is_recorded_in_sales:
+                # Get the sales record for this project
+                sale = Sales.query.filter_by(project_id=project.id).first()
+                if sale:
+                    sale.received_amount += payment.amount_received
+                    sale.calculate_difference()
+                    payment.is_recorded_in_sales = True
+            
             db.session.commit()
         
         flash('Payment updated successfully!', 'success')
@@ -632,6 +665,14 @@ def delete_payment(id):
     
     payment = ProjectPayment.query.get_or_404(id)
     project_id = payment.project_id
+    
+    # Update the sales record if this payment was recorded in sales
+    if payment.is_recorded_in_sales and payment.amount_received:
+        sale = Sales.query.filter_by(project_id=project_id).first()
+        if sale:
+            sale.received_amount -= payment.amount_received
+            sale.calculate_difference()
+            db.session.commit()  # Save the sales update first
     
     db.session.delete(payment)
     db.session.commit()

@@ -75,34 +75,7 @@
                         <h6 class="fw-bold">End Date</h6>
                         <p>{{ project.end_date | formatdate if project.end_date else 'Not set' }}</p>
                         
-                        {% if project.end_date %}
-                        <div class="card mb-3">
-                            <div class="card-body text-center">
-                                <h5 class="mb-4">Time left to deliver</h5>
-                                <div class="time-blocks d-flex justify-content-center gap-4 mb-4" data-deadline="{{ project.end_date }}">
-                                    <div class="time-block">
-                                        <div class="time-value days">00</div>
-                                        <div class="time-label">Days</div>
-                                    </div>
-                                    <div class="time-divider">:</div>
-                                    <div class="time-block">
-                                        <div class="time-value hours">00</div>
-                                        <div class="time-label">Hours</div>
-                                    </div>
-                                    <div class="time-divider">:</div>
-                                    <div class="time-block">
-                                        <div class="time-value minutes">00</div>
-                                        <div class="time-label">Minutes</div>
-                                    </div>
-                                    <div class="time-divider">:</div>
-                                    <div class="time-block">
-                                        <div class="time-value seconds">00</div>
-                                        <div class="time-label">Seconds</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
+              
                         
                         <h6 class="fw-bold">Budget</h6>
                         <p>{{ "$%.2f"|format(project.budget) if project.budget else 'Not specified' }}</p>

@@ -138,6 +138,7 @@ class Project(db.Model):
     tasks = db.relationship('Task', backref='project', lazy=True, cascade='all, delete-orphan')
     milestones = db.relationship('ProjectMilestone', backref='project', lazy=True, cascade='all, delete-orphan')
     payments = db.relationship('ProjectPayment', backref='project', lazy=True)
+    sale = db.relationship('Sales', backref='project_sale', uselist=False, cascade='all, delete-orphan')
     
     @property
     def progress(self):
@@ -202,12 +203,46 @@ class ProjectPayment(db.Model):
     notes = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    is_recorded_in_sales = db.Column(db.Boolean, default=False)  # Track if payment is reflected in sales
     
     # Relationships
     milestone = db.relationship('ProjectMilestone', backref='payment', uselist=False)
     
+    def update_project_sales(self):
+        """Update the project's sales record with this payment"""
+        from app import db
+        if not self.is_recorded_in_sales and self.amount_received and self.status == 'transferred':
+            project_sale = Sales.query.filter_by(project_id=self.project_id).first()
+            if project_sale:
+                project_sale.received_amount += self.amount_received
+                project_sale.calculate_difference()
+                self.is_recorded_in_sales = True
+                db.session.commit()
+    
     def __repr__(self):
         return f'<ProjectPayment {self.amount_original} {self.currency_original}>'
+
+class Sales(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
+    total_amount = db.Column(db.Numeric(10, 2), nullable=False)
+    received_amount = db.Column(db.Numeric(10, 2), default=0)
+    currency = db.Column(db.String(3), default='USD')
+    status = db.Column(db.String(20), default='open')  # open, closed
+    difference = db.Column(db.Numeric(10, 2), default=0)  # difference between total and received
+    closed_date = db.Column(db.Date)
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def calculate_difference(self):
+        """Calculate the difference between total amount and received amount"""
+        if self.total_amount and self.received_amount:
+            self.difference = self.total_amount - self.received_amount
+        return self.difference
+        
+    def __repr__(self):
+        return f'<Sales for Project #{self.project_id} - {self.status}>'
 
 class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)

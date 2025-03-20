@@ -131,3 +131,23 @@ class ProjectPaymentForm(FlaskForm):
                        default='pending')
     notes = TextAreaField('Notes', validators=[Optional()])
     submit = SubmitField('Save Payment')
+
+class SalesForm(FlaskForm):
+    project_id = SelectField('Project', validators=[DataRequired()], coerce=int)
+    total_amount = DecimalField('Total Amount', validators=[DataRequired(), NumberRange(min=0)], places=2)
+    received_amount = DecimalField('Received Amount', validators=[Optional(), NumberRange(min=0)], places=2, default=Decimal('0.00'))
+    currency = SelectField('Currency', 
+                         choices=[('USD', 'USD'), 
+                                 ('EUR', 'EUR'), 
+                                 ('GBP', 'GBP'),
+                                 ('INR', 'INR'),
+                                 ('AUD', 'AUD'),
+                                 ('CAD', 'CAD')],
+                         default='USD')
+    status = SelectField('Status', 
+                      choices=[('open', 'Open'), 
+                              ('closed', 'Closed')],
+                      default='open')
+    closed_date = DateField('Closed Date', validators=[Optional()])
+    notes = TextAreaField('Notes', validators=[Optional()])
+    submit = SubmitField('Save Sales Record')
