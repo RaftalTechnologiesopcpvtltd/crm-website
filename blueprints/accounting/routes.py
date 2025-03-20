@@ -1,6 +1,6 @@
 from flask import render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from decimal import Decimal
 import random
 from app import db
@@ -8,7 +8,7 @@ from models_accounting import ChartOfAccount, FiscalYear, AccountingPeriod, Jour
 from models_accounting import Currency, ExchangeRate, Tax, Vendor, VendorInvoice, VendorPayment
 from models_accounting import Customer, CustomerInvoice, CustomerPayment, BankAccount, BankReconciliation, BankTransaction
 from models_accounting import AccountType, DebitCredit
-from utils import generate_csv, generate_pdf, format_currency
+from utils import generate_csv, generate_pdf, format_currency, export_trial_balance, export_balance_sheet, export_income_statement, export_cash_flow_statement
 from . import accounting_bp
 from .forms import ChartOfAccountForm, FiscalYearForm, AccountingPeriodForm, JournalEntryForm, JournalEntryLineForm
 from .forms import CurrencyForm, ExchangeRateForm, TaxForm, VendorForm, VendorInvoiceForm, VendorPaymentForm
@@ -791,6 +791,7 @@ def cash_flow_statement():
     """Display the cash flow statement"""
     from_date_str = request.args.get('from_date')
     to_date_str = request.args.get('to_date')
+    export_format = request.args.get('export')
     from_date = None
     to_date = None
     
@@ -990,6 +991,7 @@ def cash_flow_statement():
 def trial_balance():
     """Display the trial balance"""
     as_of_date_str = request.args.get('as_of_date')
+    export_format = request.args.get('export')
     as_of_date = None
     
     if as_of_date_str:
@@ -1043,6 +1045,11 @@ def trial_balance():
                 'debit_balance': debit_balance,
                 'credit_balance': credit_balance
             })
+    
+    # Handle export requests
+    if export_format in ['csv', 'pdf']:
+        from utils import export_trial_balance
+        return export_trial_balance(accounts_with_balances, total_debits, total_credits, as_of_date, export_format)
     
     return render_template(
         'accounting/trial_balance.html',
