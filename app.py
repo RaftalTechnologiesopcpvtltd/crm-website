@@ -9,7 +9,7 @@ from sqlalchemy.orm import DeclarativeBase
 from werkzeug.exceptions import HTTPException
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.WARNING)
 
 # Base class for SQLAlchemy models
 class Base(DeclarativeBase):
