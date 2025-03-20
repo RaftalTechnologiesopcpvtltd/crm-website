@@ -84,8 +84,10 @@
                         
               
                         
+                        {% if current_user.is_admin %}
                         <h6 class="fw-bold">Budget</h6>
                         <p>{{ "$%.2f"|format(project.budget) if project.budget else 'Not specified' }}</p>
+                        {% endif %}
                     </div>
                 </div>
                 
@@ -96,7 +98,7 @@
                     <h6 class="fw-bold">Progress</h6>
                     <div class="d-flex justify-content-between mb-1">
                         <span>{{ project.progress }}% Complete</span>
-                        {% if project.budget %}
+                        {% if project.budget and current_user.is_admin %}
                         <span>Budget: ${{ "%.2f"|format(project.budget) }}</span>
                         {% endif %}
                     </div>
@@ -144,7 +146,11 @@
                         <div class="col-md-6">
                             <div class="d-flex justify-content-between mb-1">
                                 <span class="small text-muted">Payment Progress</span>
+                                {% if current_user.is_admin %}
                                 <span class="small">${{ "%.2f"|format(paid_milestone_amount) }}/${{ "%.2f"|format(total_milestone_amount) }}</span>
+                                {% else %}
+                                <span class="small">{{ payment_percentage }}%</span>
+                                {% endif %}
                             </div>
                             <div class="progress mb-2" style="height: 15px;">
                                 <div class="progress-bar bg-success" role="progressbar" style="width: {{ payment_percentage }}%;" 
@@ -257,7 +263,9 @@
                                 </span>
                             </div>
                             <div class="text-end">
+                                {% if current_user.is_admin %}
                                 <div class="text-muted mb-2">${{ "%.2f"|format(milestone.amount) }}</div>
+                                {% endif %}
                                 <div class="btn-group btn-group-sm">
                                     <a href="{{ url_for('project_management.edit_milestone', id=milestone.id) }}" class="btn btn-outline-primary">
                                         <i class="fas fa-edit"></i>
@@ -290,6 +298,7 @@
     </div>
 </div>
 
+{% if current_user.is_admin %}
 <div class="row mb-4">
     <div class="col-12">
         <div class="card">
@@ -353,6 +362,7 @@
         </div>
     </div>
 </div>
+{% endif %}
 
 <div class="row">
     <div class="col-12">
