@@ -5,6 +5,9 @@
 {% block header %}Dashboard{% endblock %}
 
 {% block content %}
+<!-- HTMX SSE Connection for Real-time Updates -->
+<div hx-ext="sse" sse-connect="{{ url_for('project_management.dashboard_stream') }}">
+    <!-- This div will be updated in real-time with server-sent events -->
 <!-- Animated Welcome Banner -->
 <div class="row mb-4">
     <div class="col-12">
@@ -147,14 +150,14 @@
                     <div class="col-md-6 mb-3">
                         <div class="stat-card bg-dark slide-in-left">
                             <i class="fas fa-project-diagram text-primary"></i>
-                            <h2 class="counter">{{ total_projects }}</h2>
+                            <h2 class="counter" id="total-projects-count" sse-swap="project_count">{{ total_projects }}</h2>
                             <p>Total Projects</p>
                         </div>
                     </div>
                     <div class="col-md-6 mb-3">
                         <div class="stat-card bg-dark slide-in-right">
                             <i class="fas fa-check-circle text-success"></i>
-                            <h2 class="counter">{{ completed_projects }}</h2>
+                            <h2 class="counter" id="completed-projects-count" sse-swap="completed_projects">{{ completed_projects }}</h2>
                             <p>Completed Projects</p>
                         </div>
                     </div>
@@ -188,14 +191,14 @@
                     <div class="col-md-6 mb-3">
                         <div class="stat-card bg-dark slide-in-left">
                             <i class="fas fa-tasks text-primary"></i>
-                            <h2 class="counter">{{ total_tasks }}</h2>
+                            <h2 class="counter" id="total-tasks-count" sse-swap="task_count">{{ total_tasks }}</h2>
                             <p>Total Tasks</p>
                         </div>
                     </div>
                     <div class="col-md-6 mb-3">
                         <div class="stat-card bg-dark slide-in-right">
                             <i class="fas fa-check text-success"></i>
-                            <h2 class="counter">{{ completed_tasks }}</h2>
+                            <h2 class="counter" id="completed-tasks-count" sse-swap="completed_tasks">{{ completed_tasks }}</h2>
                             <p>Completed Tasks</p>
                         </div>
                     </div>
@@ -349,7 +352,7 @@
                             <div class="stats-item">
                                 <i class="fas fa-calendar-alt text-success"></i>
                                 <span class="stats-label">Pending Leaves:</span>
-                                <span class="stats-value">{{ department_data.hr.pending_leaves }}</span>
+                                <span class="stats-value" id="pending-leaves" sse-swap="department_data.hr.pending_leaves">{{ department_data.hr.pending_leaves }}</span>
                             </div>
                             <div class="stats-item">
                                 <i class="fas fa-clock text-info"></i>

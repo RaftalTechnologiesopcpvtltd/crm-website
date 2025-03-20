@@ -1210,3 +1210,127 @@ def api_project_milestones(project_id):
     milestones = ProjectMilestone.query.filter_by(project_id=project_id).all()
     result = [{'id': m.id, 'name': m.name} for m in milestones]
     return jsonify(result)
+
+@project_bp.route('/api/dashboard-stats', methods=['GET'])
+@login_required
+def api_dashboard_stats():
+    """API endpoint to get the latest dashboard statistics for real-time updates"""
+    # Get task statistics for the current user
+    total_tasks = Task.query.filter_by(user_id=current_user.id).count()
+    completed_tasks = Task.query.filter_by(user_id=current_user.id, status='completed').count()
+    in_progress_tasks = Task.query.filter_by(user_id=current_user.id, status='in-progress').count()
+    todo_tasks = Task.query.filter_by(user_id=current_user.id, status='to-do').count()
+    
+    # Get overdue tasks
+    overdue_tasks = Task.query.filter_by(
+        user_id=current_user.id
+    ).filter(
+        Task.due_date < datetime.now().date(),
+        Task.status != 'completed'
+    ).count()
+    
+    # Department-specific statistics
+    department_stats = {}
+    
+    if current_user.department == 'hr' or current_user.is_admin:
+        department_stats['hr'] = {
+            'total_employees': Employee.query.count(),
+            'pending_leaves': Leave.query.filter_by(status='pending').count(),
+            'attendance_today': Attendance.query.filter_by(date=datetime.now().date()).count()
+        }
+    
+    if current_user.department == 'accounting' or current_user.is_admin:
+        department_stats['accounting'] = {
+            'pending_payments': ProjectPayment.query.filter(
+                ProjectPayment.status.in_(['pending', 'in-review'])
+            ).count(),
+            'total_revenue': str(db.session.query(func.sum(Sales.received_amount)).scalar() or 0)
+        }
+    
+    if current_user.department == 'developer' or current_user.is_admin:
+        department_stats['developer'] = {
+            'urgent_tasks': Task.query.filter_by(user_id=current_user.id, priority='urgent').count(),
+            'in_review_tasks': Task.query.filter_by(user_id=current_user.id, status='in-review').count()
+        }
+    
+    response_data = {
+        'task_stats': {
+            'total': total_tasks,
+            'completed': completed_tasks,
+            'in_progress': in_progress_tasks,
+            'todo': todo_tasks,
+            'overdue': overdue_tasks,
+            'completion_rate': round((completed_tasks / total_tasks * 100) if total_tasks > 0 else 0, 1)
+        },
+        'department_stats': department_stats,
+        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    }
+    
+    return jsonify(response_data)
+
+@project_bp.route('/api/dashboard-stream')
+@login_required
+def dashboard_stream():
+    """Server-sent events endpoint for real-time dashboard updates"""
+    def generate():
+        while True:
+            # Get the latest dashboard stats
+            stats = get_dashboard_stats_for_user(current_user)
+            
+            # Format as SSE
+            yield f"data: {json.dumps(stats)}\n\n"
+            
+            # Send updates every 5 seconds
+            time.sleep(5)
+    
+    return Response(generate(), content_type='text/event-stream')
+
+def get_dashboard_stats_for_user(user):
+    """Get dashboard statistics for a specific user"""
+    # Task statistics
+    user_tasks = Task.query.filter_by(user_id=user.id).count()
+    completed_tasks = Task.query.filter_by(user_id=user.id, status='completed').count()
+    
+    # Project statistics - filtered based on user access
+    if user.is_admin or user.department == 'accounting':
+        total_projects = Project.query.count()
+        completed_projects = Project.query.filter_by(status='completed').count()
+    else:
+        assigned_project_ids = db.session.query(Task.project_id).filter_by(user_id=user.id).distinct().all()
+        assigned_project_ids = [p[0] for p in assigned_project_ids]
+        
+        if assigned_project_ids:
+            total_projects = Project.query.filter(Project.id.in_(assigned_project_ids)).count()
+            completed_projects = Project.query.filter(Project.id.in_(assigned_project_ids), Project.status=='completed').count()
+        else:
+            total_projects = completed_projects = 0
+    
+    # Department-specific data
+    department_data = {}
+    
+    if user.department == 'hr' or user.is_admin:
+        department_data['hr'] = {
+            'pending_leaves': Leave.query.filter_by(status='pending').count(),
+            'attendance_today': Attendance.query.filter_by(date=datetime.now().date()).count()
+        }
+    
+    if user.department == 'accounting' or user.is_admin:
+        department_data['accounting'] = {
+            'pending_payments': ProjectPayment.query.filter(
+                ProjectPayment.status.in_(['pending', 'in-review'])
+            ).count()
+        }
+    
+    if user.department == 'developer' or user.is_admin:
+        department_data['developer'] = {
+            'urgent_tasks': Task.query.filter_by(user_id=user.id, priority='urgent').count()
+        }
+    
+    return {
+        'task_count': user_tasks,
+        'completed_tasks': completed_tasks,
+        'project_count': total_projects,
+        'completed_projects': completed_projects,
+        'department_data': department_data,
+        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    }
