@@ -682,55 +682,50 @@ def new_payment():
             project = Project.query.get(payment.project_id)
             project.payment_status = 'transferred'
             
-            # Update the sales record for this project
+            # Update the sales record for this project using the model method
             if payment.amount_received:
-                # Get the sales record for this project
-                sale = Sales.query.filter_by(project_id=project.id).first()
-                if sale:
-                    sale.received_amount += payment.amount_received
-                    sale.calculate_difference()
-                    payment.is_recorded_in_sales = True
+                payment.update_project_sales()
+                
+                # Create accounting journal entry for payment (if accounting module is enabled)
+                try:
+                    from blueprints.accounting.routes import create_journal_entry
+                    from models_accounting import ChartOfAccount
                     
-                    # Create accounting journal entry for payment (if accounting module is enabled)
-                    try:
-                        from blueprints.accounting.routes import create_journal_entry
-                        from models_accounting import ChartOfAccount
+                    # Find appropriate accounts
+                    cash_account = ChartOfAccount.query.filter_by(name='Cash').first()
+                    ar_account = ChartOfAccount.query.filter_by(name='Accounts Receivable').first()
+                    
+                    if cash_account and ar_account:
+                        # Prepare line items
+                        line_items = [
+                            # Debit Cash
+                            {
+                                'account_id': cash_account.id,
+                                'debit_amount': float(payment.amount_received),
+                                'credit_amount': 0,
+                                'description': f'Payment received for project {project.name}'
+                            },
+                            # Credit Accounts Receivable
+                            {
+                                'account_id': ar_account.id,
+                                'debit_amount': 0,
+                                'credit_amount': float(payment.amount_received),
+                                'description': f'Payment received for project {project.name}'
+                            }
+                        ]
                         
-                        # Find appropriate accounts
-                        cash_account = ChartOfAccount.query.filter_by(name='Cash').first()
-                        ar_account = ChartOfAccount.query.filter_by(name='Accounts Receivable').first()
-                        
-                        if cash_account and ar_account:
-                            # Prepare line items
-                            line_items = [
-                                # Debit Cash
-                                {
-                                    'account_id': cash_account.id,
-                                    'debit_amount': float(payment.amount_received),
-                                    'credit_amount': 0,
-                                    'description': f'Payment received for project {project.name}'
-                                },
-                                # Credit Accounts Receivable
-                                {
-                                    'account_id': ar_account.id,
-                                    'debit_amount': 0,
-                                    'credit_amount': float(payment.amount_received),
-                                    'description': f'Payment received for project {project.name}'
-                                }
-                            ]
-                            
-                            # Create journal entry
-                            create_journal_entry(
-                                entry_type='PAYMENT',
-                                transaction_date=payment.payment_date or datetime.now().date(),
-                                reference=f'PMT-{payment.id}',
-                                memo=f'Payment for project: {project.name}',
-                                line_items=line_items,
-                                user_id=current_user.id
-                            )
-                    except Exception as e:
-                        # Log error but don't prevent payment creation if accounting fails
-                        print(f"Error creating accounting entry for payment: {str(e)}")
+                        # Create journal entry
+                        create_journal_entry(
+                            entry_type='PAYMENT',
+                            transaction_date=payment.payment_date or datetime.now().date(),
+                            reference=f'PMT-{payment.id}',
+                            memo=f'Payment for project: {project.name}',
+                            line_items=line_items,
+                            user_id=current_user.id
+                        )
+                except Exception as e:
+                    # Log error but don't prevent payment creation if accounting fails
+                    print(f"Error creating accounting entry for payment: {str(e)}")
             
             db.session.commit()
         
@@ -769,53 +764,49 @@ def edit_payment(id):
             
             # Update the sales record if this is a new transferred payment
             if payment.amount_received and not payment.is_recorded_in_sales:
-                # Get the sales record for this project
-                sale = Sales.query.filter_by(project_id=project.id).first()
-                if sale:
-                    sale.received_amount += payment.amount_received
-                    sale.calculate_difference()
-                    payment.is_recorded_in_sales = True
+                # Use the model method to update sales record
+                payment.update_project_sales()
+                
+                # Create accounting journal entry for payment (if accounting module is enabled)
+                try:
+                    from blueprints.accounting.routes import create_journal_entry
+                    from models_accounting import ChartOfAccount
                     
-                    # Create accounting journal entry for payment (if accounting module is enabled)
-                    try:
-                        from blueprints.accounting.routes import create_journal_entry
-                        from models_accounting import ChartOfAccount
+                    # Find appropriate accounts
+                    cash_account = ChartOfAccount.query.filter_by(name='Cash').first()
+                    ar_account = ChartOfAccount.query.filter_by(name='Accounts Receivable').first()
+                    
+                    if cash_account and ar_account:
+                        # Prepare line items
+                        line_items = [
+                            # Debit Cash
+                            {
+                                'account_id': cash_account.id,
+                                'debit_amount': float(payment.amount_received),
+                                'credit_amount': 0,
+                                'description': f'Payment received for project {project.name}'
+                            },
+                            # Credit Accounts Receivable
+                            {
+                                'account_id': ar_account.id,
+                                'debit_amount': 0,
+                                'credit_amount': float(payment.amount_received),
+                                'description': f'Payment received for project {project.name}'
+                            }
+                        ]
                         
-                        # Find appropriate accounts
-                        cash_account = ChartOfAccount.query.filter_by(name='Cash').first()
-                        ar_account = ChartOfAccount.query.filter_by(name='Accounts Receivable').first()
-                        
-                        if cash_account and ar_account:
-                            # Prepare line items
-                            line_items = [
-                                # Debit Cash
-                                {
-                                    'account_id': cash_account.id,
-                                    'debit_amount': float(payment.amount_received),
-                                    'credit_amount': 0,
-                                    'description': f'Payment received for project {project.name}'
-                                },
-                                # Credit Accounts Receivable
-                                {
-                                    'account_id': ar_account.id,
-                                    'debit_amount': 0,
-                                    'credit_amount': float(payment.amount_received),
-                                    'description': f'Payment received for project {project.name}'
-                                }
-                            ]
-                            
-                            # Create journal entry
-                            create_journal_entry(
-                                entry_type='PAYMENT',
-                                transaction_date=payment.payment_date or datetime.now().date(),
-                                reference=f'PMT-{payment.id}',
-                                memo=f'Payment for project: {project.name}',
-                                line_items=line_items,
-                                user_id=current_user.id
-                            )
-                    except Exception as e:
-                        # Log error but don't prevent payment update if accounting fails
-                        print(f"Error creating accounting entry for edited payment: {str(e)}")
+                        # Create journal entry
+                        create_journal_entry(
+                            entry_type='PAYMENT',
+                            transaction_date=payment.payment_date or datetime.now().date(),
+                            reference=f'PMT-{payment.id}',
+                            memo=f'Payment for project: {project.name}',
+                            line_items=line_items,
+                            user_id=current_user.id
+                        )
+                except Exception as e:
+                    # Log error but don't prevent payment update if accounting fails
+                    print(f"Error creating accounting entry for edited payment: {str(e)}")
             
             db.session.commit()
         
@@ -836,9 +827,16 @@ def delete_payment(id):
     
     # Update the sales record if this payment was recorded in sales
     if payment.is_recorded_in_sales and payment.amount_received:
+        # Instead of directly modifying the sales record, we'll utilize a special method
+        # First, mark the payment as not recorded so we can reverse the effect
+        original_amount = payment.amount_received
+        payment.is_recorded_in_sales = False
+        
+        # Get the sales record
         sale = Sales.query.filter_by(project_id=project_id).first()
         if sale:
-            sale.received_amount -= payment.amount_received
+            # Manually deduct the amount since we're deleting the payment
+            sale.received_amount -= original_amount
             sale.calculate_difference()
             
             # Create reversing journal entry for the deleted payment
