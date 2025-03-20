@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">{{ title }}</h4>
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-file-export"></i> Export
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                    <li><a class="dropdown-item" href="{{ url_for('accounting.cash_flow_statement', from_date=from_date, to_date=to_date, export='pdf') }}"><i class="fas fa-file-pdf"></i> PDF</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('accounting.cash_flow_statement', from_date=from_date, to_date=to_date, export='csv') }}"><i class="fas fa-file-csv"></i> CSV</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('accounting.cash_flow_statement') }}" class="mb-4">
+                <div class="row align-items-end">
+                    <div class="col-md-4">
+                        <label for="from_date" class="form-label">From Date</label>
+                        <input type="date" class="form-control" id="from_date" name="from_date" value="{{ from_date.strftime('%Y-%m-%d') }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="to_date" class="form-label">To Date</label>
+                        <input type="date" class="form-control" id="to_date" name="to_date" value="{{ to_date.strftime('%Y-%m-%d') }}">
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary">Update</button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="alert alert-info">
+                <h5>Period: {{ from_date.strftime('%Y-%m-%d') }} to {{ to_date.strftime('%Y-%m-%d') }}</h5>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-bordered">
+                                <tr>
+                                    <td class="fw-bold">Beginning Cash Balance</td>
+                                    <td class="text-end">${{ '{:.2f}'.format(beginning_cash) }}</td>
+                                </tr>
+                                <tr class="table-light">
+                                    <td class="fw-bold">Net Cash from Operating Activities</td>
+                                    <td class="text-end {% if total_operating >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        ${{ '{:.2f}'.format(total_operating) }}
+                                    </td>
+                                </tr>
+                                <tr class="table-light">
+                                    <td class="fw-bold">Net Cash from Investing Activities</td>
+                                    <td class="text-end {% if total_investing >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        ${{ '{:.2f}'.format(total_investing) }}
+                                    </td>
+                                </tr>
+                                <tr class="table-light">
+                                    <td class="fw-bold">Net Cash from Financing Activities</td>
+                                    <td class="text-end {% if total_financing >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        ${{ '{:.2f}'.format(total_financing) }}
+                                    </td>
+                                </tr>
+                                <tr class="table-primary">
+                                    <td class="fw-bold">Net Change in Cash</td>
+                                    <td class="text-end fw-bold {% if net_change >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        ${{ '{:.2f}'.format(net_change) }}
+                                    </td>
+                                </tr>
+                                <tr class="table-dark">
+                                    <td class="fw-bold">Ending Cash Balance</td>
+                                    <td class="text-end fw-bold">${{ '{:.2f}'.format(ending_cash) }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Operating Activities -->
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Operating Activities</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if operating_activities %}
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Reference</th>
+                                            <th>Description</th>
+                                            <th>Inflow</th>
+                                            <th>Outflow</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for activity in operating_activities %}
+                                        <tr>
+                                            <td>{{ activity.date.strftime('%Y-%m-%d') }}</td>
+                                            <td>{{ activity.reference }}</td>
+                                            <td>{{ activity.description }}</td>
+                                            <td class="text-end text-success">
+                                                {% if activity.type == 'inflow' %}
+                                                ${{ '{:.2f}'.format(activity.amount) }}
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-end text-danger">
+                                                {% if activity.type == 'outflow' %}
+                                                ${{ '{:.2f}'.format(activity.amount) }}
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-light fw-bold">
+                                            <td colspan="3" class="text-end">Total Operating Activities</td>
+                                            <td colspan="2" class="text-end {% if total_operating >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                                ${{ '{:.2f}'.format(total_operating) }}
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-warning">No operating activities found for this period.</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Investing Activities -->
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Investing Activities</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if investing_activities %}
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Reference</th>
+                                            <th>Description</th>
+                                            <th>Inflow</th>
+                                            <th>Outflow</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for activity in investing_activities %}
+                                        <tr>
+                                            <td>{{ activity.date.strftime('%Y-%m-%d') }}</td>
+                                            <td>{{ activity.reference }}</td>
+                                            <td>{{ activity.description }}</td>
+                                            <td class="text-end text-success">
+                                                {% if activity.type == 'inflow' %}
+                                                ${{ '{:.2f}'.format(activity.amount) }}
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-end text-danger">
+                                                {% if activity.type == 'outflow' %}
+                                                ${{ '{:.2f}'.format(activity.amount) }}
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-light fw-bold">
+                                            <td colspan="3" class="text-end">Total Investing Activities</td>
+                                            <td colspan="2" class="text-end {% if total_investing >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                                ${{ '{:.2f}'.format(total_investing) }}
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-warning">No investing activities found for this period.</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financing Activities -->
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Financing Activities</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if financing_activities %}
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Reference</th>
+                                            <th>Description</th>
+                                            <th>Inflow</th>
+                                            <th>Outflow</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for activity in financing_activities %}
+                                        <tr>
+                                            <td>{{ activity.date.strftime('%Y-%m-%d') }}</td>
+                                            <td>{{ activity.reference }}</td>
+                                            <td>{{ activity.description }}</td>
+                                            <td class="text-end text-success">
+                                                {% if activity.type == 'inflow' %}
+                                                ${{ '{:.2f}'.format(activity.amount) }}
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-end text-danger">
+                                                {% if activity.type == 'outflow' %}
+                                                ${{ '{:.2f}'.format(activity.amount) }}
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-light fw-bold">
+                                            <td colspan="3" class="text-end">Total Financing Activities</td>
+                                            <td colspan="2" class="text-end {% if total_financing >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                                ${{ '{:.2f}'.format(total_financing) }}
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-warning">No financing activities found for this period.</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

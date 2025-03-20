@@ -785,6 +785,206 @@ def income_statement():
         net_income=net_income
     )
 
+@accounting_bp.route('/cash_flow', methods=['GET'])
+@login_required
+def cash_flow_statement():
+    """Display the cash flow statement"""
+    from_date_str = request.args.get('from_date')
+    to_date_str = request.args.get('to_date')
+    from_date = None
+    to_date = None
+    
+    if from_date_str:
+        try:
+            from_date = datetime.strptime(from_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            flash('Invalid from date format.', 'warning')
+            from_date = date.today().replace(day=1)  # First day of current month
+    else:
+        from_date = date.today().replace(day=1)  # First day of current month
+    
+    if to_date_str:
+        try:
+            to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            flash('Invalid to date format.', 'warning')
+            to_date = date.today()
+    else:
+        to_date = date.today()
+    
+    # Get cash and bank accounts
+    cash_accounts = ChartOfAccount.query.filter(
+        ChartOfAccount.account_type == 'Asset',
+        ChartOfAccount.is_active == True,
+        (ChartOfAccount.name.like('%Cash%') | ChartOfAccount.name.like('%Bank%'))
+    ).order_by(ChartOfAccount.code).all()
+    
+    # Get all journal entries related to cash flow categories within the date range
+    # Categorize transactions by cash flow type
+    operating_activities = []
+    investing_activities = []
+    financing_activities = []
+    
+    # Initialize totals
+    total_operating = Decimal('0.00')
+    total_investing = Decimal('0.00')
+    total_financing = Decimal('0.00')
+    beginning_cash = Decimal('0.00')
+    ending_cash = Decimal('0.00')
+    
+    # Calculate beginning cash balance (as of from_date - 1 day)
+    beginning_date = from_date - timedelta(days=1)
+    
+    for cash_account in cash_accounts:
+        # Get beginning balance
+        query = JournalEntryLine.query.join(
+            JournalEntry, 
+            JournalEntryLine.journal_entry_id == JournalEntry.id
+        ).filter(
+            JournalEntryLine.account_id == cash_account.id,
+            JournalEntry.date <= beginning_date,
+            JournalEntry.status == 'POSTED'
+        )
+        
+        debits = sum(line.debit_amount for line in query.all())
+        credits = sum(line.credit_amount for line in query.all())
+        
+        # Cash is a debit-normal account
+        beginning_cash += (debits - credits)
+        
+        # Find all transactions within the period for categorization
+        transactions = JournalEntryLine.query.join(
+            JournalEntry, 
+            JournalEntryLine.journal_entry_id == JournalEntry.id
+        ).filter(
+            JournalEntryLine.account_id == cash_account.id,
+            JournalEntry.date >= from_date,
+            JournalEntry.date <= to_date,
+            JournalEntry.status == 'POSTED'
+        ).order_by(JournalEntry.date).all()
+        
+        # For each cash transaction, find the counter account to categorize
+        for line in transactions:
+            # Get the journal entry this line belongs to
+            journal_entry = JournalEntry.query.get(line.journal_entry_id)
+            
+            # Find counter accounts (other lines in the same entry)
+            counter_lines = JournalEntryLine.query.filter(
+                JournalEntryLine.journal_entry_id == journal_entry.id,
+                JournalEntryLine.account_id != cash_account.id
+            ).all()
+            
+            # If this is a cash debit (increase), counter account was credited
+            # If this is a cash credit (decrease), counter account was debited
+            for counter_line in counter_lines:
+                counter_account = ChartOfAccount.query.get(counter_line.account_id)
+                
+                # Determine the amount and direction (inflow or outflow)
+                amount = Decimal('0.00')
+                if line.debit_amount > 0:  # Cash inflow
+                    amount = line.debit_amount
+                    flow_type = 'inflow'
+                else:  # Cash outflow
+                    amount = line.credit_amount
+                    flow_type = 'outflow'
+                
+                # Skip zero amounts
+                if amount == 0:
+                    continue
+                
+                # Categorize based on counter account type
+                # This is a simplified categorization - in a production system
+                # you might want more specific rules
+                
+                # Revenue and expense accounts typically represent operating activities
+                if counter_account.account_type in ['Revenue', 'Expense']:
+                    category = 'Operating'
+                    operating_activities.append({
+                        'date': journal_entry.date,
+                        'description': f"{journal_entry.memo or 'No description'} - {counter_account.name}",
+                        'amount': amount,
+                        'type': flow_type,
+                        'reference': journal_entry.reference or f'JE-{journal_entry.id}'
+                    })
+                    
+                    if flow_type == 'inflow':
+                        total_operating += amount
+                    else:
+                        total_operating -= amount
+                
+                # Long-term assets typically represent investing activities
+                elif counter_account.account_type == 'Asset' and 'long-term' in counter_account.name.lower():
+                    category = 'Investing'
+                    investing_activities.append({
+                        'date': journal_entry.date,
+                        'description': f"{journal_entry.memo or 'No description'} - {counter_account.name}",
+                        'amount': amount,
+                        'type': flow_type,
+                        'reference': journal_entry.reference or f'JE-{journal_entry.id}'
+                    })
+                    
+                    if flow_type == 'inflow':
+                        total_investing += amount
+                    else:
+                        total_investing -= amount
+                
+                # Liabilities and equity typically represent financing activities
+                elif counter_account.account_type in ['Liability', 'Equity']:
+                    category = 'Financing'
+                    financing_activities.append({
+                        'date': journal_entry.date,
+                        'description': f"{journal_entry.memo or 'No description'} - {counter_account.name}",
+                        'amount': amount,
+                        'type': flow_type,
+                        'reference': journal_entry.reference or f'JE-{journal_entry.id}'
+                    })
+                    
+                    if flow_type == 'inflow':
+                        total_financing += amount
+                    else:
+                        total_financing -= amount
+                
+                # Default to operating activities for anything else
+                else:
+                    category = 'Operating'
+                    operating_activities.append({
+                        'date': journal_entry.date,
+                        'description': f"{journal_entry.memo or 'No description'} - {counter_account.name}",
+                        'amount': amount,
+                        'type': flow_type,
+                        'reference': journal_entry.reference or f'JE-{journal_entry.id}'
+                    })
+                    
+                    if flow_type == 'inflow':
+                        total_operating += amount
+                    else:
+                        total_operating -= amount
+    
+    # Calculate ending cash balance
+    net_change = total_operating + total_investing + total_financing
+    ending_cash = beginning_cash + net_change
+    
+    # Sort activities by date
+    operating_activities.sort(key=lambda x: x['date'])
+    investing_activities.sort(key=lambda x: x['date'])
+    financing_activities.sort(key=lambda x: x['date'])
+    
+    return render_template(
+        'accounting/cash_flow.html',
+        title='Cash Flow Statement',
+        from_date=from_date,
+        to_date=to_date,
+        operating_activities=operating_activities,
+        investing_activities=investing_activities,
+        financing_activities=financing_activities,
+        total_operating=total_operating,
+        total_investing=total_investing,
+        total_financing=total_financing,
+        beginning_cash=beginning_cash,
+        ending_cash=ending_cash,
+        net_change=net_change
+    )
+
 @accounting_bp.route('/trial_balance', methods=['GET'])
 @login_required
 def trial_balance():
