@@ -11,8 +11,16 @@ hr_bp = Blueprint('hr', __name__, url_prefix='/hr')
 
 @hr_bp.before_request
 @login_required
-def check_admin():
-    if not current_user.is_admin and not getattr(current_user, 'employee', None):
+def check_access():
+    # Allow access to HR department users and admins
+    if current_user.is_admin or current_user.department == 'hr':
+        return None
+    
+    # For other users, only allow access to view their own employee profile and leave requests
+    # Block access to sensitive HR functions (employee list, payroll, attendance management)
+    if request.endpoint in ['hr.attendance', 'hr.new_attendance', 'hr.bulk_attendance', 
+                          'hr.payroll', 'hr.new_payroll', 'hr.calculate_payroll', 
+                          'hr.employees', 'hr.new_employee']:
         flash('Access denied. You need HR privileges to access this section.', 'danger')
         return redirect(url_for('project_management.dashboard'))
 

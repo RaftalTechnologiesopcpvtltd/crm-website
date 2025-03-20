@@ -13,6 +13,42 @@ from datetime import datetime, date
 
 project_bp = Blueprint('project_management', __name__, url_prefix='')
 
+@project_bp.before_request
+@login_required
+def check_access():
+    """
+    Check if user has access to project management routes based on their department.
+    - Admins have full access
+    - Developer department has access to tasks and assigned projects
+    - Accounting department has access to sales and payment reports
+    - Other departments have limited access
+    """
+    # Allow admins full access
+    if current_user.is_admin:
+        return None
+    
+    # Route-specific permissions
+    endpoint = request.endpoint
+    
+    # Sales and payments section - only for accounting and admin
+    if ('sales' in endpoint or 'payment' in endpoint) and current_user.department != 'accounting':
+        flash('Access denied. You need accounting privileges to access this section.', 'danger')
+        return redirect(url_for('project_management.dashboard'))
+        
+    # Project management endpoints - check developer access to their own projects
+    if 'project_detail' in endpoint or 'edit_project' in endpoint:
+        project_id = request.view_args.get('id')
+        if project_id and current_user.department == 'developer':
+            # Check if developer is assigned to any tasks in this project
+            assigned_tasks = Task.query.filter_by(
+                project_id=project_id, 
+                user_id=current_user.id
+            ).count()
+            
+            if assigned_tasks == 0:
+                flash('Access denied. You are not assigned to this project.', 'danger')
+                return redirect(url_for('project_management.dashboard'))
+
 # Helper function to check and update milestone status when tasks are completed
 def check_and_update_milestone_status(project_id):
     """
