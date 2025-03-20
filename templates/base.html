@@ -123,6 +123,12 @@
                                             </ul>
                                         </div>
                                     </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if 'accounting.vendors' == request.endpoint %}active{% endif %}" href="{{ url_for('accounting.vendors') }}">
+                                            <i class="fas fa-user-tie me-2"></i>
+                                            Vendor Management
+                                        </a>
+                                    </li>
                                 </ul>
                             </div>
                         </li>
