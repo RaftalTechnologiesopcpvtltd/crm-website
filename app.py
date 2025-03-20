@@ -44,10 +44,12 @@ def create_app():
         from blueprints.accounts.routes import accounts_bp
         from blueprints.hr.routes import hr_bp
         from blueprints.project_management.routes import project_bp
+        from blueprints.accounting import accounting_bp
         
         app.register_blueprint(accounts_bp)
         app.register_blueprint(hr_bp)
         app.register_blueprint(project_bp)
+        app.register_blueprint(accounting_bp)
         
         # Make sure the models are imported and tables created
         import models

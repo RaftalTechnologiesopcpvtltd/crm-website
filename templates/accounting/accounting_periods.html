@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mt-4">Accounting Periods - {{ fiscal_year.name }}</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('project_management.dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('accounting.fiscal_years') }}">Fiscal Years</a></li>
+        <li class="breadcrumb-item active">Accounting Periods</li>
+    </ol>
+    
+    <div class="mb-4">
+        <a href="{{ url_for('accounting.new_accounting_period', year_id=fiscal_year.id) }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Period
+        </a>
+        <a href="{{ url_for('accounting.fiscal_years') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Fiscal Years
+        </a>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-calendar-alt me-1"></i>
+            Fiscal Year Information
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <strong>Name:</strong> {{ fiscal_year.name }}
+                </div>
+                <div class="col-md-3">
+                    <strong>Start Date:</strong> {{ fiscal_year.start_date|formatdate }}
+                </div>
+                <div class="col-md-3">
+                    <strong>End Date:</strong> {{ fiscal_year.end_date|formatdate }}
+                </div>
+                <div class="col-md-3">
+                    <strong>Status:</strong>
+                    {% if fiscal_year.is_closed %}
+                    <span class="badge bg-danger">Closed</span>
+                    {% else %}
+                    <span class="badge bg-success">Open</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-calendar-week me-1"></i>
+            Accounting Periods
+        </div>
+        <div class="card-body">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Status</th>
+                        <th>Journal Entries</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for period in periods %}
+                    <tr>
+                        <td>{{ period.name }}</td>
+                        <td>{{ period.start_date|formatdate }}</td>
+                        <td>{{ period.end_date|formatdate }}</td>
+                        <td>
+                            {% if period.is_closed %}
+                            <span class="badge bg-danger">Closed</span>
+                            {% else %}
+                            <span class="badge bg-success">Open</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-info">{{ period.journal_entries|length }}</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

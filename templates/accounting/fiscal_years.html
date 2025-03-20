@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mt-4">Fiscal Years</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('project_management.dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active">Fiscal Years</li>
+    </ol>
+    
+    <div class="mb-4">
+        <a href="{{ url_for('accounting.new_fiscal_year') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Fiscal Year
+        </a>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-calendar me-1"></i>
+            Fiscal Years
+        </div>
+        <div class="card-body">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for year in years %}
+                    <tr>
+                        <td>{{ year.name }}</td>
+                        <td>{{ year.start_date|formatdate }}</td>
+                        <td>{{ year.end_date|formatdate }}</td>
+                        <td>
+                            {% if year.is_closed %}
+                            <span class="badge bg-danger">Closed</span>
+                            {% else %}
+                            <span class="badge bg-success">Open</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('accounting.accounting_periods', id=year.id) }}" class="btn btn-sm btn-info">
+                                <i class="fas fa-calendar-alt"></i> Periods
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
