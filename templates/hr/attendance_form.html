@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">{{ title }}</h1>
+        <a href="{{ url_for('hr.attendance') }}" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to Attendance
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">{{ 'Edit' if attendance else 'New' }} Attendance Record</h6>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {{ form.hidden_tag() }}
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.employee_id.label(class="form-control-label") }}
+                            {% if form.employee_id.errors %}
+                                {{ form.employee_id(class="form-control is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.employee_id.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.employee_id(class="form-control") }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.date.label(class="form-control-label") }}
+                            {% if form.date.errors %}
+                                {{ form.date(class="form-control is-invalid", type="date") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.date.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.date(class="form-control", type="date") }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.check_in_time.label(class="form-control-label") }}
+                            {% if form.check_in_time.errors %}
+                                {{ form.check_in_time(class="form-control is-invalid", type="time") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.check_in_time.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.check_in_time(class="form-control", type="time") }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.check_out_time.label(class="form-control-label") }}
+                            {% if form.check_out_time.errors %}
+                                {{ form.check_out_time(class="form-control is-invalid", type="time") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.check_out_time.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.check_out_time(class="form-control", type="time") }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.status.label(class="form-control-label") }}
+                            {% if form.status.errors %}
+                                {{ form.status(class="form-control is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.status.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.status(class="form-control") }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.remarks.label(class="form-control-label") }}
+                            {% if form.remarks.errors %}
+                                {{ form.remarks(class="form-control is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.remarks.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.remarks(class="form-control") }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group mt-3">
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

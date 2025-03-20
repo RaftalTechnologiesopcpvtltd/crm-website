@@ -6,7 +6,13 @@ class EmployeeForm(FlaskForm):
     user_id = SelectField('User Account', validators=[DataRequired()], coerce=int)
     first_name = StringField('First Name', validators=[DataRequired(), Length(max=64)])
     last_name = StringField('Last Name', validators=[DataRequired(), Length(max=64)])
-    department = StringField('Department', validators=[DataRequired(), Length(max=64)])
+    department = SelectField('Department', validators=[DataRequired()], 
+                           choices=[
+                               ('accounting', 'Accounting'), 
+                               ('hr', 'Human Resources'), 
+                               ('developer', 'Developer'),
+                               ('general', 'General')
+                           ])
     position = StringField('Position', validators=[DataRequired(), Length(max=64)])
     hire_date = DateField('Hire Date', validators=[DataRequired()])
     salary = DecimalField('Salary', validators=[DataRequired(), NumberRange(min=0)], places=2)

@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Attendance Management</h1>
+        <div>
+            {% if current_user.is_admin or current_user.department == 'hr' %}
+            <a href="{{ url_for('hr.new_attendance') }}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+                <i class="fas fa-plus fa-sm text-white-50"></i> Add Attendance Record
+            </a>
+            <a href="{{ url_for('hr.bulk_attendance') }}" class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm">
+                <i class="fas fa-users fa-sm text-white-50"></i> Bulk Attendance
+            </a>
+            {% endif %}
+            <a href="{{ url_for('hr.attendance_report') }}" class="d-none d-sm-inline-block btn btn-sm btn-info shadow-sm">
+                <i class="fas fa-file-alt fa-sm text-white-50"></i> Generate Report
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Form -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Filter Attendance Records</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" action="{{ url_for('hr.attendance') }}">
+                <div class="row">
+                    {% if current_user.is_admin or current_user.department == 'hr' %}
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="employee_id">Employee</label>
+                            <select class="form-control" id="employee_id" name="employee_id">
+                                <option value="">All Employees</option>
+                                {% for employee in employees %}
+                                <option value="{{ employee.id }}" {% if request.args.get('employee_id')|int == employee.id %}selected{% endif %}>
+                                    {{ employee.full_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="start_date">Start Date</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" value="{{ request.args.get('start_date', '') }}">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="end_date">End Date</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" value="{{ request.args.get('end_date', '') }}">
+                        </div>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary">Filter</button>
+                        <a href="{{ url_for('hr.attendance') }}" class="btn btn-secondary ml-2">Reset</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Attendance Records Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Attendance Records</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Date</th>
+                            <th>Check-in</th>
+                            <th>Check-out</th>
+                            <th>Status</th>
+                            <th>Hours</th>
+                            <th>Remarks</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in attendance_records %}
+                        <tr>
+                            <td>{{ record.employee.full_name }}</td>
+                            <td>{{ record.date.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ record.check_in_time.strftime('%H:%M') if record.check_in_time else 'N/A' }}</td>
+                            <td>{{ record.check_out_time.strftime('%H:%M') if record.check_out_time else 'N/A' }}</td>
+                            <td>
+                                {% if record.status == 'present' %}
+                                <span class="badge badge-success">Present</span>
+                                {% elif record.status == 'absent' %}
+                                <span class="badge badge-danger">Absent</span>
+                                {% elif record.status == 'late' %}
+                                <span class="badge badge-warning">Late</span>
+                                {% elif record.status == 'half-day' %}
+                                <span class="badge badge-info">Half-Day</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ record.total_hours() if record.check_in_time and record.check_out_time else 'N/A' }}</td>
+                            <td>{{ record.remarks or 'No remarks' }}</td>
+                            <td>
+                                {% if current_user.is_admin or current_user.department == 'hr' %}
+                                <a href="{{ url_for('hr.edit_attendance', id=record.id) }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal{{ record.id }}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+
+                                <!-- Delete Modal -->
+                                <div class="modal fade" id="deleteModal{{ record.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel{{ record.id }}" aria-hidden="true">
+                                    <div class="modal-dialog" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="deleteModalLabel{{ record.id }}">Confirm Delete</h5>
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                    <span aria-hidden="true">&times;</span>
+                                                </button>
+                                            </div>
+                                            <div class="modal-body">
+                                                Are you sure you want to delete this attendance record for {{ record.employee.full_name }} on {{ record.date.strftime('%Y-%m-%d') }}?
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                                <form action="{{ url_for('hr.delete_attendance', id=record.id) }}" method="post">
+                                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <span class="text-muted">No actions</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        $('#dataTable').DataTable({
+            "order": [[1, "desc"]]  // Sort by date descending
+        });
+    });
+</script>
+{% endblock %}
