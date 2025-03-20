@@ -51,7 +51,13 @@
                             <span class="badge bg-danger">Reversed</span>
                             {% endif %}
                         </td>
-                        <td>{{ entry.total_debits|format_currency }}</td>
+                        <td>
+                            {% if entry.lines|length > 0 %}
+                                {{ entry.total_debits|format_currency }}
+                            {% else %}
+                                <span class="text-muted">No line items</span>
+                            {% endif %}
+                        </td>
                         <td>{{ entry.user.username }}</td>
                         <td>
                             {% if entry.status == 'DRAFT' %}

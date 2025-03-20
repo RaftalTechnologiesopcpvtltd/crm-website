@@ -376,7 +376,7 @@ def new_journal_entry():
         db.session.add(entry)
         db.session.commit()
         
-        flash(f'Journal Entry {entry.entry_number} has been created.', 'success')
+        flash(f'Journal Entry {entry.entry_number} has been created. Please add line items below.', 'success')
         return redirect(url_for('accounting.edit_journal_entry_lines', id=entry.id))
     
     return render_template('accounting/journal_entry_form.html', 
@@ -446,7 +446,7 @@ def post_journal_entry(id):
         flash('Only draft journal entries can be posted.', 'danger')
         return redirect(url_for('accounting.edit_journal_entry_lines', id=id))
     
-    if not entry.is_balanced():
+    if not entry.is_balanced:
         flash('Journal entry must be balanced before posting.', 'danger')
         return redirect(url_for('accounting.edit_journal_entry_lines', id=id))
     

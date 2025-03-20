@@ -68,6 +68,13 @@
             Journal Entry Lines
         </div>
         <div class="card-body">
+            {% if entry.lines|length == 0 and entry.status == 'DRAFT' %}
+            <div class="alert alert-info mb-3">
+                <i class="fas fa-info-circle me-2"></i>
+                You must add at least one line item to your journal entry. Enter debit and credit amounts for each account to record your transaction.
+            </div>
+            {% endif %}
+            
             {% if entry.status == 'DRAFT' %}
             <form method="POST" action="">
                 {{ form.csrf_token }}
