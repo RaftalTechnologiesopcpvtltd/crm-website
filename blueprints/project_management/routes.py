@@ -256,8 +256,7 @@ def new_task(project_id):
 
     # Populate milestone choices
     milestones = ProjectMilestone.query.filter_by(project_id=project_id).all()
-    form.milestone_id.choices = [(m.id, m.name) for m in milestones]
-    form.milestone_id.choices.insert(0, (0, 'No Milestone'))
+    form.milestone_id.choices = [(0, 'No Milestone')] + [(m.id, m.name) for m in milestones]
 
     if form.validate_on_submit():
         task = Task(
