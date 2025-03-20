@@ -8,8 +8,41 @@ from blueprints.project_management.forms import (
 )
 from utils import generate_csv, generate_pdf
 from decimal import Decimal
+from sqlalchemy import func
 
 project_bp = Blueprint('project_management', __name__, url_prefix='')
+
+# Helper function to check and update milestone status when tasks are completed
+def check_and_update_milestone_status(project_id):
+    """
+    Check if all tasks for a project are completed and update the milestone status accordingly
+    """
+    # Get all milestones for the project
+    milestones = ProjectMilestone.query.filter_by(project_id=project_id).all()
+    
+    # For each milestone, check if tasks are completed
+    for milestone in milestones:
+        # Skip milestones that are already marked as paid
+        if milestone.status == 'paid':
+            continue
+            
+        # Get tasks related to this project
+        project_tasks = Task.query.filter_by(project_id=project_id).all()
+        
+        # If there are no tasks, continue to the next milestone
+        if not project_tasks:
+            continue
+            
+        # Check if all tasks are completed
+        all_tasks_completed = all(task.status == 'completed' for task in project_tasks)
+        
+        # If all tasks are completed and milestone is not yet completed, update its status
+        if all_tasks_completed and milestone.status == 'pending':
+            milestone.status = 'completed'
+            db.session.add(milestone)
+            
+    # Commit changes if any
+    db.session.commit()
 
 @project_bp.route('/')
 @project_bp.route('/dashboard')
@@ -282,11 +315,19 @@ def edit_task(id):
     form = TaskForm(obj=task)
     form.user_id.choices = [(u.id, u.username) for u in User.query.all()]
     
+    old_status = task.status
+    
     if form.validate_on_submit():
         form.populate_obj(task)
         db.session.commit()
         
-        flash('Task updated successfully!', 'success')
+        # If task status changed to completed, check and update milestone status
+        if old_status != 'completed' and task.status == 'completed':
+            check_and_update_milestone_status(task.project_id)
+            flash('Task updated and marked as completed! Milestone status has been updated if all tasks are completed.', 'success')
+        else:
+            flash('Task updated successfully!', 'success')
+            
         return redirect(url_for('project_management.project_detail', id=task.project_id))
     
     return render_template('project_management/task_form.html', form=form, task=task, project=task.project, title='Edit Task')
@@ -324,7 +365,13 @@ def update_task_status(id, status):
     task.status = status
     db.session.commit()
     
-    flash(f'Task status updated to {status}.', 'success')
+    # If task is marked as completed, check if all project tasks are completed
+    # and update milestone status accordingly
+    if status == 'completed':
+        check_and_update_milestone_status(task.project_id)
+        flash('Task marked as completed! Milestone status has been updated if all tasks are completed.', 'success')
+    else:
+        flash(f'Task status updated to {status}.', 'success')
     
     referrer = request.referrer
     if referrer:
