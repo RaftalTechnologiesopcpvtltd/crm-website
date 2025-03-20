@@ -285,10 +285,15 @@ def new_task(project_id):
     # Populate user choices
     form.user_id.choices = [(u.id, u.username) for u in User.query.all()]
     
+    # Populate milestone choices
+    milestones = ProjectMilestone.query.filter_by(project_id=project_id).all()
+    form.milestone_id.choices = [(0, '-- No Milestone --')] + [(m.id, m.name) for m in milestones]
+    
     if form.validate_on_submit():
         task = Task(
             project_id=project.id,
             user_id=form.user_id.data,
+            milestone_id=form.milestone_id.data if form.milestone_id.data > 0 else None,
             title=form.title.data,
             description=form.description.data,
             due_date=form.due_date.data,
@@ -315,10 +320,27 @@ def edit_task(id):
     form = TaskForm(obj=task)
     form.user_id.choices = [(u.id, u.username) for u in User.query.all()]
     
+    # Populate milestone choices
+    milestones = ProjectMilestone.query.filter_by(project_id=task.project_id).all()
+    form.milestone_id.choices = [(0, '-- No Milestone --')] + [(m.id, m.name) for m in milestones]
+    
     old_status = task.status
     
     if form.validate_on_submit():
-        form.populate_obj(task)
+        # Handle milestone_id specifically
+        if form.milestone_id.data == 0:
+            task.milestone_id = None
+        else:
+            task.milestone_id = form.milestone_id.data
+            
+        # Update other fields
+        task.user_id = form.user_id.data
+        task.title = form.title.data
+        task.description = form.description.data
+        task.due_date = form.due_date.data
+        task.priority = form.priority.data
+        task.status = form.status.data
+        
         db.session.commit()
         
         # If task status changed to completed, check and update milestone status
