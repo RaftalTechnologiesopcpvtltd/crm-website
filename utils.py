@@ -1,6 +1,6 @@
 import csv
 import io
-from datetime import datetime
+from datetime import datetime, timedelta
 import base64
 from flask import Response, render_template, url_for
 import pdfkit
@@ -90,3 +90,77 @@ def get_status_badge_class(status):
         return 'bg-danger'
     else:
         return 'bg-secondary'
+
+def get_time_remaining(due_date):
+    """
+    Calculate time remaining until due date and return formatted string
+    
+    Args:
+        due_date: The due date to compare against current time
+    
+    Returns:
+        Dictionary with 'time_str', 'days', 'hours', 'minutes', and 'is_overdue' values
+    """
+    if not due_date:
+        return {
+            'time_str': 'No deadline',
+            'days': 0,
+            'hours': 0,
+            'minutes': 0,
+            'is_overdue': False,
+            'css_class': 'text-muted'
+        }
+    
+    now = datetime.now().replace(microsecond=0)
+    
+    # Convert date to datetime at end of day if it's just a date
+    if isinstance(due_date, datetime):
+        target_date = due_date
+    else:
+        target_date = datetime.combine(due_date, datetime.max.time())
+    
+    # Calculate time difference
+    time_diff = target_date - now
+    
+    # Check if overdue
+    is_overdue = time_diff.total_seconds() < 0
+    
+    # Get absolute values for display
+    if is_overdue:
+        time_diff = abs(time_diff)
+        prefix = "Overdue by: "
+        css_class = "text-danger"
+    else:
+        prefix = "Time left: "
+        
+        # Determine color based on urgency
+        if time_diff.days > 5:
+            css_class = "text-success"
+        elif time_diff.days >= 2:
+            css_class = "text-info"
+        elif time_diff.days >= 1:
+            css_class = "text-warning"
+        else:
+            css_class = "text-danger"
+    
+    # Calculate days, hours, minutes
+    days = time_diff.days
+    hours = time_diff.seconds // 3600
+    minutes = (time_diff.seconds % 3600) // 60
+    
+    # Format the time string
+    if days > 0:
+        time_str = f"{prefix}{days}d {hours}h {minutes}m"
+    elif hours > 0:
+        time_str = f"{prefix}{hours}h {minutes}m"
+    else:
+        time_str = f"{prefix}{minutes}m"
+    
+    return {
+        'time_str': time_str,
+        'days': days,
+        'hours': hours,
+        'minutes': minutes,
+        'is_overdue': is_overdue,
+        'css_class': css_class
+    }

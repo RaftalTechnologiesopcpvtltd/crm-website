@@ -77,6 +77,11 @@ def create_app():
             return value.strftime(format)
         return ""
     
+    @app.template_filter('time_remaining')
+    def time_remaining_filter(due_date):
+        from utils import get_time_remaining
+        return get_time_remaining(due_date)
+    
     # Context processors
     @app.context_processor
     def inject_now():

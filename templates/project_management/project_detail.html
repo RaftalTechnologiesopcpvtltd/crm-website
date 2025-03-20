@@ -48,6 +48,15 @@
                         
                         <h6 class="fw-bold">End Date</h6>
                         <p>{{ project.end_date | formatdate if project.end_date else 'Not set' }}</p>
+                        
+                        {% if project.end_date %}
+                        <h6 class="fw-bold">Deadline Timer</h6>
+                        {% set time_info = project.end_date | time_remaining %}
+                        <p class="{{ time_info.css_class }} fw-bold">
+                            <i class="fas fa-clock me-1"></i>
+                            {{ time_info.time_str }}
+                        </p>
+                        {% endif %}
                     </div>
                 </div>
                 
@@ -142,6 +151,7 @@
                                         <th>Task</th>
                                         <th>Assigned To</th>
                                         <th>Due Date</th>
+                                        <th>Time Remaining</th>
                                         <th>Priority</th>
                                         <th>Status</th>
                                         <th>Actions</th>
@@ -153,6 +163,17 @@
                                         <td>{{ task.title }}</td>
                                         <td>{{ task.assigned_to.username if task.assigned_to else 'Unassigned' }}</td>
                                         <td>{{ task.due_date | formatdate if task.due_date else 'Not set' }}</td>
+                                        <td>
+                                            {% if task.due_date %}
+                                                {% set time_info = task.due_date | time_remaining %}
+                                                <span class="{{ time_info.css_class }} fw-bold small">
+                                                    <i class="fas fa-clock me-1"></i>
+                                                    {{ time_info.time_str }}
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted">No deadline</span>
+                                            {% endif %}
+                                        </td>
                                         <td>
                                             <span class="badge {{ 'bg-danger' if task.priority == 'high' or task.priority == 'urgent' else 'bg-warning text-dark' if task.priority == 'medium' else 'bg-info text-dark' }}">
                                                 {{ task.priority|capitalize }}
@@ -356,6 +377,13 @@
                     <div class="col-md-6">
                         <h6 class="fw-bold">Due Date</h6>
                         <p>{{ task.due_date | formatdate if task.due_date else 'Not set' }}</p>
+                        {% if task.due_date %}
+                        {% set time_info = task.due_date | time_remaining %}
+                        <p class="{{ time_info.css_class }} fw-bold">
+                            <i class="fas fa-clock me-1"></i>
+                            {{ time_info.time_str }}
+                        </p>
+                        {% endif %}
                     </div>
                 </div>
                 
