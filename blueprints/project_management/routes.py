@@ -679,3 +679,100 @@ def delete_payment(id):
     
     flash('Payment deleted successfully!', 'success')
     return redirect(url_for('project_management.project_payments', project_id=project_id))
+
+# Sales Management Routes
+@project_bp.route('/sales')
+@login_required
+def sales():
+    """List all sales records"""
+    if not current_user.is_admin:
+        flash('Access denied. Admin privileges required.', 'danger')
+        return redirect(url_for('project_management.dashboard'))
+        
+    sales_records = Sales.query.order_by(Sales.created_at.desc()).all()
+    return render_template('project_management/sales.html', sales=sales_records, title='Sales Records')
+
+@project_bp.route('/sales/<int:id>')
+@login_required
+def sales_detail(id):
+    """View sales record details"""
+    if not current_user.is_admin:
+        flash('Access denied. Admin privileges required.', 'danger')
+        return redirect(url_for('project_management.dashboard'))
+        
+    sale = Sales.query.get_or_404(id)
+    # Get all payments associated with this project
+    payments = ProjectPayment.query.filter_by(project_id=sale.project_id).all()
+    return render_template('project_management/sales_detail.html', sale=sale, payments=payments, title='Sales Details')
+
+@project_bp.route('/sales/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_sales(id):
+    """Edit a sales record"""
+    if not current_user.is_admin:
+        flash('Access denied. Admin privileges required.', 'danger')
+        return redirect(url_for('project_management.dashboard'))
+        
+    sale = Sales.query.get_or_404(id)
+    form = SalesForm(obj=sale)
+    
+    # Populate project choices - limit to this project only for editing
+    form.project_id.choices = [(sale.project_id, sale.project.name)]
+    
+    if form.validate_on_submit():
+        old_status = sale.status
+        form.populate_obj(sale)
+        
+        # If status changed to closed, set the closed date
+        if old_status != 'closed' and sale.status == 'closed':
+            from datetime import date
+            sale.closed_date = date.today()
+            
+        # Recalculate difference
+        sale.calculate_difference()
+        
+        db.session.commit()
+        flash('Sales record updated successfully!', 'success')
+        return redirect(url_for('project_management.sales_detail', id=sale.id))
+    
+    return render_template('project_management/sales_form.html', form=form, sale=sale, title='Edit Sales Record')
+
+@project_bp.route('/sales/<int:id>/close', methods=['POST'])
+@login_required
+def close_sales(id):
+    """Force close a sales record"""
+    if not current_user.is_admin:
+        flash('Access denied. Admin privileges required.', 'danger')
+        return redirect(url_for('project_management.dashboard'))
+        
+    sale = Sales.query.get_or_404(id)
+    
+    if sale.status == 'closed':
+        flash('Sales record is already closed.', 'info')
+        return redirect(url_for('project_management.sales_detail', id=sale.id))
+    
+    from datetime import date
+    sale.status = 'closed'
+    sale.closed_date = date.today()
+    sale.calculate_difference()
+    
+    db.session.commit()
+    
+    flash('Sales record has been closed successfully!', 'success')
+    return redirect(url_for('project_management.sales_detail', id=sale.id))
+
+@project_bp.route('/project/<int:project_id>/sales')
+@login_required
+def project_sales(project_id):
+    """View sales for a specific project"""
+    project = Project.query.get_or_404(project_id)
+    sale = Sales.query.filter_by(project_id=project_id).first()
+    
+    if not sale:
+        flash('No sales record found for this project.', 'warning')
+        return redirect(url_for('project_management.project_detail', id=project_id))
+    
+    # Get all payments associated with this project
+    payments = ProjectPayment.query.filter_by(project_id=project_id).all()
+    
+    return render_template('project_management/sales_detail.html', sale=sale, payments=payments, project=project, title='Project Sales')

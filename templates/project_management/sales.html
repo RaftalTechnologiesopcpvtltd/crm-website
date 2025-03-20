@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Sales Records - Employee Management System{% endblock %}
+
+{% block header %}Sales Management{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        {% if sales %}
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">All Sales Records</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Project</th>
+                                <th>Total Amount</th>
+                                <th>Received Amount</th>
+                                <th>Difference</th>
+                                <th>Status</th>
+                                <th>Last Updated</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in sales %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('project_management.project_detail', id=sale.project_id) }}">
+                                        {{ sale.project.name }}
+                                    </a>
+                                </td>
+                                <td>{{ sale.currency }} {{ sale.total_amount }}</td>
+                                <td>{{ sale.currency }} {{ sale.received_amount }}</td>
+                                <td>{{ sale.currency }} {{ sale.difference }}</td>
+                                <td>
+                                    <span class="badge {{ 'bg-success' if sale.status == 'closed' else 'bg-primary' }}">
+                                        {{ sale.status|capitalize }}
+                                    </span>
+                                </td>
+                                <td>{{ sale.updated_at | formatdate }}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{{ url_for('project_management.sales_detail', id=sale.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if current_user.is_admin %}
+                                        <a href="{{ url_for('project_management.edit_sales', id=sale.id) }}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% if sale.status != 'closed' %}
+                                        <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#closeModal{{ sale.id }}">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        {% endif %}
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <!-- Close Modal -->
+                                    <div class="modal fade" id="closeModal{{ sale.id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Confirm Close Sale</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>Are you sure you want to close this sales record?</p>
+                                                    <p>Project: <strong>{{ sale.project.name }}</strong></p>
+                                                    <p>Total Amount: <strong>{{ sale.currency }} {{ sale.total_amount }}</strong></p>
+                                                    <p>Received Amount: <strong>{{ sale.currency }} {{ sale.received_amount }}</strong></p>
+                                                    <p>Current Difference: <strong>{{ sale.currency }} {{ sale.difference }}</strong></p>
+                                                    <p class="text-danger">This will mark the sales as closed and finalize the difference amount.</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <form action="{{ url_for('project_management.close_sales', id=sale.id) }}" method="POST">
+                                                        <button type="submit" class="btn btn-success">Close Sale</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-coins mb-3" style="font-size: 3rem;"></i>
+                <h3>No Sales Records Found</h3>
+                <p class="text-muted">Sales records are automatically created when projects with budgets are added</p>
+                <a href="{{ url_for('project_management.new_project') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i> Create New Project
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
