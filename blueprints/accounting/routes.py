@@ -1,15 +1,118 @@
 from flask import render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
-from datetime import datetime
+from datetime import datetime, date
 from app import db
 from models_accounting import ChartOfAccount, FiscalYear, AccountingPeriod, JournalEntry, JournalEntryLine
 from models_accounting import Currency, ExchangeRate, Tax, Vendor, VendorInvoice, VendorPayment
 from models_accounting import Customer, CustomerInvoice, CustomerPayment, BankAccount, BankReconciliation, BankTransaction
+from models_accounting import AccountType, DebitCredit
 from utils import generate_csv, generate_pdf, format_currency
 from . import accounting_bp
 from .forms import ChartOfAccountForm, FiscalYearForm, AccountingPeriodForm, JournalEntryForm, JournalEntryLineForm
 from .forms import CurrencyForm, ExchangeRateForm, TaxForm, VendorForm, VendorInvoiceForm, VendorPaymentForm
 from .forms import CustomerForm, CustomerInvoiceForm, CustomerPaymentForm, BankAccountForm, BankReconciliationForm, BankTransactionForm
+
+# Initialize default accounting data
+def initialize_accounting():
+    """Initialize default accounting data if not exists"""
+    # Check if chart of accounts exists
+    if ChartOfAccount.query.count() == 0:
+        # Default chart of accounts
+        default_accounts = [
+            # Asset accounts
+            {'code': '1000', 'name': 'Cash', 'account_type': 'Asset', 'normal_balance': 'DEBIT', 'parent_id': None},
+            {'code': '1100', 'name': 'Accounts Receivable', 'account_type': 'Asset', 'normal_balance': 'DEBIT', 'parent_id': None},
+            {'code': '1200', 'name': 'Bank Accounts', 'account_type': 'Asset', 'normal_balance': 'DEBIT', 'parent_id': None},
+            {'code': '1300', 'name': 'Inventory', 'account_type': 'Asset', 'normal_balance': 'DEBIT', 'parent_id': None},
+            
+            # Liability accounts
+            {'code': '2000', 'name': 'Accounts Payable', 'account_type': 'Liability', 'normal_balance': 'CREDIT', 'parent_id': None},
+            {'code': '2100', 'name': 'Accrued Liabilities', 'account_type': 'Liability', 'normal_balance': 'CREDIT', 'parent_id': None},
+            {'code': '2200', 'name': 'Taxes Payable', 'account_type': 'Liability', 'normal_balance': 'CREDIT', 'parent_id': None},
+            
+            # Equity accounts
+            {'code': '3000', 'name': 'Owner\'s Equity', 'account_type': 'Equity', 'normal_balance': 'CREDIT', 'parent_id': None},
+            {'code': '3100', 'name': 'Retained Earnings', 'account_type': 'Equity', 'normal_balance': 'CREDIT', 'parent_id': None},
+            
+            # Revenue accounts
+            {'code': '4000', 'name': 'Sales Revenue', 'account_type': 'Revenue', 'normal_balance': 'CREDIT', 'parent_id': None},
+            {'code': '4100', 'name': 'Service Revenue', 'account_type': 'Revenue', 'normal_balance': 'CREDIT', 'parent_id': None},
+            {'code': '4200', 'name': 'Interest Income', 'account_type': 'Revenue', 'normal_balance': 'CREDIT', 'parent_id': None},
+            
+            # Expense accounts
+            {'code': '5000', 'name': 'Cost of Goods Sold', 'account_type': 'Expense', 'normal_balance': 'DEBIT', 'parent_id': None},
+            {'code': '5100', 'name': 'Salaries and Wages', 'account_type': 'Expense', 'normal_balance': 'DEBIT', 'parent_id': None},
+            {'code': '5200', 'name': 'Rent Expense', 'account_type': 'Expense', 'normal_balance': 'DEBIT', 'parent_id': None},
+            {'code': '5300', 'name': 'Utilities Expense', 'account_type': 'Expense', 'normal_balance': 'DEBIT', 'parent_id': None},
+            {'code': '5400', 'name': 'Office Supplies', 'account_type': 'Expense', 'normal_balance': 'DEBIT', 'parent_id': None},
+        ]
+        
+        for account_data in default_accounts:
+            account = ChartOfAccount(
+                code=account_data['code'],
+                name=account_data['name'],
+                account_type=account_data['account_type'],
+                normal_balance=account_data['normal_balance'],
+                is_active=True,
+                description=f"Default {account_data['account_type']} account"
+            )
+            db.session.add(account)
+        
+        db.session.commit()
+    
+    # Check if fiscal year exists
+    if FiscalYear.query.count() == 0:
+        # Create current fiscal year
+        current_year = datetime.now().year
+        fiscal_year = FiscalYear(
+            name=f"FY {current_year}",
+            start_date=date(current_year, 1, 1),
+            end_date=date(current_year, 12, 31),
+            is_closed=False
+        )
+        db.session.add(fiscal_year)
+        db.session.commit()
+        
+        # Create quarterly periods
+        periods = [
+            {'name': f"Q1 {current_year}", 'start_date': date(current_year, 1, 1), 'end_date': date(current_year, 3, 31)},
+            {'name': f"Q2 {current_year}", 'start_date': date(current_year, 4, 1), 'end_date': date(current_year, 6, 30)},
+            {'name': f"Q3 {current_year}", 'start_date': date(current_year, 7, 1), 'end_date': date(current_year, 9, 30)},
+            {'name': f"Q4 {current_year}", 'start_date': date(current_year, 10, 1), 'end_date': date(current_year, 12, 31)},
+        ]
+        
+        for period_data in periods:
+            period = AccountingPeriod(
+                fiscal_year_id=fiscal_year.id,
+                name=period_data['name'],
+                start_date=period_data['start_date'],
+                end_date=period_data['end_date'],
+                is_closed=False
+            )
+            db.session.add(period)
+        
+        db.session.commit()
+    
+    # Check if currencies exist
+    if Currency.query.count() == 0:
+        # Default currencies
+        currencies = [
+            {'code': 'USD', 'name': 'US Dollar', 'symbol': '$', 'is_base': True},
+            {'code': 'EUR', 'name': 'Euro', 'symbol': '€', 'is_base': False},
+            {'code': 'GBP', 'name': 'British Pound', 'symbol': '£', 'is_base': False},
+        ]
+        
+        for currency_data in currencies:
+            currency = Currency(
+                code=currency_data['code'],
+                name=currency_data['name'],
+                symbol=currency_data['symbol'],
+                is_base=currency_data['is_base'],
+                is_active=True
+            )
+            db.session.add(currency)
+        
+        db.session.commit()
 
 # Check if user is admin - decorator
 def check_admin():
@@ -22,6 +125,9 @@ def check_admin():
 @login_required
 def chart_of_accounts():
     """List all accounts in the chart of accounts"""
+    # Initialize accounting data if not exists
+    initialize_accounting()
+    
     accounts = ChartOfAccount.query.order_by(ChartOfAccount.code).all()
     
     # Group by account type
@@ -142,6 +248,9 @@ def fiscal_years():
     """List all fiscal years"""
     check_admin()
     
+    # Initialize accounting data if not exists
+    initialize_accounting()
+    
     years = FiscalYear.query.order_by(FiscalYear.start_date.desc()).all()
     return render_template('accounting/fiscal_years.html', 
                           years=years, 
@@ -226,6 +335,9 @@ def new_accounting_period(year_id):
 def journal_entries():
     """List all journal entries"""
     check_admin()
+    
+    # Initialize accounting data if not exists
+    initialize_accounting()
     
     entries = JournalEntry.query.order_by(JournalEntry.date.desc()).all()
     return render_template('accounting/journal_entries.html', 
@@ -322,7 +434,7 @@ def delete_journal_entry_line(id, line_id):
     flash('Journal entry line deleted.', 'success')
     return redirect(url_for('accounting.edit_journal_entry_lines', id=id))
 
-@accounting_bp.route('/journal-entries/<int:id>/post', methods=['POST'])
+@accounting_bp.route('/journal-entries/<int:id>/post', methods=['GET', 'POST'])
 @login_required
 def post_journal_entry(id):
     """Post a journal entry"""
@@ -334,7 +446,7 @@ def post_journal_entry(id):
         flash('Only draft journal entries can be posted.', 'danger')
         return redirect(url_for('accounting.edit_journal_entry_lines', id=id))
     
-    if not entry.is_balanced:
+    if not entry.is_balanced():
         flash('Journal entry must be balanced before posting.', 'danger')
         return redirect(url_for('accounting.edit_journal_entry_lines', id=id))
     
