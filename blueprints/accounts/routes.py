@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash
+from wtforms import BooleanField
 from app import db
 from models import User
 from blueprints.accounts.forms import LoginForm, RegistrationForm, ProfileForm
@@ -83,3 +84,58 @@ def user_list():
     
     users = User.query.all()
     return render_template('accounts/user_list.html', users=users)
+
+@accounts_bp.route('/edit_user/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_user(id):
+    if not current_user.is_admin:
+        flash('Access denied. Admin privileges required.', 'danger')
+        return redirect(url_for('project_management.dashboard'))
+    
+    user = User.query.get_or_404(id)
+    form = ProfileForm(obj=user)
+    
+    # Add admin field to the form
+    form.is_admin = BooleanField('Admin Privileges', default=user.is_admin)
+    
+    if form.validate_on_submit():
+        user.username = form.username.data
+        user.email = form.email.data
+        user.is_admin = form.is_admin.data if hasattr(form, 'is_admin') else user.is_admin
+        
+        if form.new_password.data:
+            user.password_hash = generate_password_hash(form.new_password.data)
+        
+        db.session.commit()
+        flash('User updated successfully!', 'success')
+        return redirect(url_for('accounts.user_list'))
+    
+    return render_template('accounts/profile.html', form=form, user=user, admin_view=True)
+
+@accounts_bp.route('/delete_user/<int:id>')
+@login_required
+def delete_user(id):
+    if not current_user.is_admin:
+        flash('Access denied. Admin privileges required.', 'danger')
+        return redirect(url_for('project_management.dashboard'))
+    
+    user = User.query.get_or_404(id)
+    
+    # Prevent deleting yourself
+    if user.id == current_user.id:
+        flash('You cannot delete your own account.', 'danger')
+        return redirect(url_for('accounts.user_list'))
+    
+    # Check if user has any related records before deletion
+    if hasattr(user, 'employee') and user.employee:
+        flash('Cannot delete user with employee records. Remove employee record first.', 'danger')
+        return redirect(url_for('accounts.user_list'))
+    
+    if hasattr(user, 'tasks') and user.tasks:
+        flash('Cannot delete user with assigned tasks. Reassign tasks first.', 'danger')
+        return redirect(url_for('accounts.user_list'))
+    
+    db.session.delete(user)
+    db.session.commit()
+    flash('User deleted successfully!', 'success')
+    return redirect(url_for('accounts.user_list'))

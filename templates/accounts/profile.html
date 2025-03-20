@@ -9,10 +9,14 @@
     <div class="col-md-8 mx-auto">
         <div class="card">
             <div class="card-header">
+                {% if admin_view %}
+                <h4>Edit User</h4>
+                {% else %}
                 <h4>Update Your Profile</h4>
+                {% endif %}
             </div>
             <div class="card-body">
-                <form method="POST" action="{{ url_for('accounts.profile') }}">
+                <form method="POST" action="{% if admin_view %}{{ url_for('accounts.edit_user', id=user.id) }}{% else %}{{ url_for('accounts.profile') }}{% endif %}">
                     {{ form.hidden_tag() }}
                     
                     <div class="mb-3">
@@ -78,6 +82,15 @@
                             </div>
                         {% endif %}
                     </div>
+                    
+                    {% if admin_view and current_user.is_admin and hasattr(form, 'is_admin') %}
+                    <div class="form-check mb-3">
+                        {{ form.is_admin(class="form-check-input", id="is_admin") }}
+                        <label class="form-check-label" for="is_admin">
+                            Grant Admin Privileges
+                        </label>
+                    </div>
+                    {% endif %}
                     
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                         <button type="submit" class="btn btn-primary">
