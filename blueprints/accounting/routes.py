@@ -412,6 +412,13 @@ def tax_config():
     check_admin()
     return render_template('accounting/tax_config.html', title='Tax Configuration')
 
+@accounting_bp.route('/year-end')
+@login_required
+def year_end():
+    """Year end closing page"""
+    check_admin()
+    return render_template('accounting/year_end.html', title='Year End Closing')
+
 @accounting_bp.route('/journal-entries')
 @login_required
 def journal_entries():
