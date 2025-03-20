@@ -141,10 +141,11 @@ class Project(db.Model):
     
     @property
     def progress(self):
-        if not self.tasks:
+        if not self.milestones:
             return 0
-        completed_tasks = sum(1 for task in self.tasks if task.status == 'completed')
-        return int((completed_tasks / len(self.tasks)) * 100)
+        milestone_count = len(self.milestones)
+        total_progress = sum(milestone.completion_percentage for milestone in self.milestones)
+        return int(total_progress / milestone_count)
     
     def __repr__(self):
         return f'<Project {self.name}>'
@@ -159,6 +160,16 @@ class ProjectMilestone(db.Model):
     status = db.Column(db.String(20), default='pending')  # pending, completed, paid
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    tasks = db.relationship('Task', backref='milestone', lazy=True)
+    
+    @property
+    def completion_percentage(self):
+        if not self.tasks:
+            return 0
+        completed_tasks = sum(1 for task in self.tasks if task.status == 'completed')
+        return int((completed_tasks / len(self.tasks)) * 100)
     
     def __repr__(self):
         return f'<ProjectMilestone {self.name}>'
@@ -190,6 +201,7 @@ class ProjectPayment(db.Model):
 class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
+    milestone_id = db.Column(db.Integer, db.ForeignKey('project_milestone.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
