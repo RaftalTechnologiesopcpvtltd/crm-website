@@ -2,13 +2,25 @@
 
 {% block title %}Leave Management - Employee Management System{% endblock %}
 
-{% block header %}Leave Management{% endblock %}
+{% block header %}
+    {% if show_all %}
+    Leave Management
+    {% else %}
+    My Leave Requests
+    {% endif %}
+{% endblock %}
 
 {% block page_actions %}
 <div class="btn-group me-2">
     <a href="{{ url_for('hr.new_leave') }}" class="btn btn-sm btn-outline-primary">
         <i class="fas fa-plus me-1"></i> New Leave Request
     </a>
+    
+    {% if show_all %}
+    <a href="{{ url_for('hr.attendance_report') }}" class="btn btn-sm btn-outline-info ms-2">
+        <i class="fas fa-chart-bar me-1"></i> Attendance Reports
+    </a>
+    {% endif %}
 </div>
 {% endblock %}
 
@@ -23,7 +35,7 @@
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                {% if current_user.is_admin %}
+                                {% if show_all %}
                                 <th>Employee</th>
                                 {% endif %}
                                 <th>Type</th>
@@ -38,7 +50,7 @@
                             {% for leave in leaves %}
                             <tr>
                                 <td>{{ leave.id }}</td>
-                                {% if current_user.is_admin %}
+                                {% if show_all %}
                                 <td>{{ leave.employee.full_name }}</td>
                                 {% endif %}
                                 <td>{{ leave.leave_type|capitalize }}</td>
@@ -59,7 +71,8 @@
                                             <i class="fas fa-eye"></i>
                                         </button>
                                         
-                                        {% if (current_user.is_admin) or (not current_user.is_admin and leave.status == 'pending') %}
+                                        {% if (current_user.is_admin or current_user.department == 'hr') or 
+                                           (not current_user.is_admin and current_user.department != 'hr' and leave.status == 'pending') %}
                                         <a href="{{ url_for('hr.edit_leave', id=leave.id) }}" class="btn btn-sm btn-outline-primary">
                                             <i class="fas fa-edit"></i>
                                         </a>
@@ -124,7 +137,7 @@
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                                                     
-                                                    {% if current_user.is_admin and leave.status == 'pending' %}
+                                                    {% if (current_user.is_admin or current_user.department == 'hr') and leave.status == 'pending' %}
                                                     <form action="{{ url_for('hr.edit_leave', id=leave.id) }}" method="POST">
                                                         <input type="hidden" name="status" value="approved">
                                                         <button type="submit" class="btn btn-success">Approve</button>

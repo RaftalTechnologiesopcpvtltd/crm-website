@@ -196,17 +196,23 @@ def new_leave():
 def edit_leave(id):
     leave = Leave.query.get_or_404(id)
     
-    if not current_user.is_admin and (not current_user.employee or current_user.employee.id != leave.employee_id):
+    # Check if user has permission to edit this leave
+    is_hr_or_admin = current_user.is_admin or current_user.department == 'hr'
+    is_owner = current_user.employee and current_user.employee.id == leave.employee_id
+    
+    if not is_hr_or_admin and not is_owner:
         flash('Access denied. You can only edit your own leave requests.', 'danger')
         return redirect(url_for('hr.leaves'))
     
-    if not current_user.is_admin and leave.status != 'pending':
+    # Regular employees can only edit pending leaves
+    if not is_hr_or_admin and leave.status != 'pending':
         flash('You cannot edit a leave request that has already been processed.', 'warning')
         return redirect(url_for('hr.leaves'))
     
     form = LeaveForm(obj=leave)
     
-    if current_user.is_admin:
+    # HR or Admin can edit all fields including status
+    if is_hr_or_admin:
         form.employee_id.choices = [(e.id, e.full_name) for e in Employee.query.all()]
         form.status.choices = [('pending', 'Pending'), ('approved', 'Approved'), ('rejected', 'Rejected')]
     else:
@@ -226,11 +232,16 @@ def edit_leave(id):
 def delete_leave(id):
     leave = Leave.query.get_or_404(id)
     
-    if not current_user.is_admin and (not current_user.employee or current_user.employee.id != leave.employee_id):
+    # Check if user has permission to delete this leave
+    is_hr_or_admin = current_user.is_admin or current_user.department == 'hr'
+    is_owner = current_user.employee and current_user.employee.id == leave.employee_id
+    
+    if not is_hr_or_admin and not is_owner:
         flash('Access denied. You can only delete your own leave requests.', 'danger')
         return redirect(url_for('hr.leaves'))
     
-    if not current_user.is_admin and leave.status != 'pending':
+    # Regular employees can only delete pending leaves
+    if not is_hr_or_admin and leave.status != 'pending':
         flash('You cannot delete a leave request that has already been processed.', 'warning')
         return redirect(url_for('hr.leaves'))
     
@@ -242,8 +253,8 @@ def delete_leave(id):
 
 @hr_bp.route('/payroll')
 def payroll():
-    if not current_user.is_admin:
-        flash('Access denied. Admin privileges required.', 'danger')
+    if not current_user.is_admin and not current_user.department == 'hr':
+        flash('Access denied. Admin or HR privileges required.', 'danger')
         return redirect(url_for('hr.employees'))
     
     payrolls = Payroll.query.order_by(Payroll.payment_date.desc()).all()
@@ -251,8 +262,8 @@ def payroll():
 
 @hr_bp.route('/payroll/new', methods=['GET', 'POST'])
 def new_payroll():
-    if not current_user.is_admin:
-        flash('Access denied. Admin privileges required.', 'danger')
+    if not current_user.is_admin and not current_user.department == 'hr':
+        flash('Access denied. Admin or HR privileges required.', 'danger')
         return redirect(url_for('hr.employees'))
     
     form = PayrollForm()
@@ -283,8 +294,8 @@ def new_payroll():
 
 @hr_bp.route('/payroll/<int:id>')
 def payroll_detail(id):
-    if not current_user.is_admin:
-        flash('Access denied. Admin privileges required.', 'danger')
+    if not current_user.is_admin and not current_user.department == 'hr':
+        flash('Access denied. Admin or HR privileges required.', 'danger')
         return redirect(url_for('hr.employees'))
     
     payroll = Payroll.query.get_or_404(id)
@@ -292,7 +303,11 @@ def payroll_detail(id):
 
 @hr_bp.route('/payroll/<int:id>/slip')
 def payroll_slip(id):
-    if not current_user.is_admin:
+    # Admin and HR can access any payslip
+    is_hr_or_admin = current_user.is_admin or current_user.department == 'hr'
+    
+    if not is_hr_or_admin:
+        # Regular employees can only view their own payslips
         employee = Employee.query.filter_by(user_id=current_user.id).first()
         if not employee:
             flash('Access denied.', 'danger')
@@ -300,9 +315,11 @@ def payroll_slip(id):
     
     payroll = Payroll.query.get_or_404(id)
     
-    if not current_user.is_admin and payroll.employee_id != employee.id:
-        flash('Access denied. You can only view your own payslips.', 'danger')
-        return redirect(url_for('project_management.dashboard'))
+    # Check if regular employee is trying to view someone else's payslip
+    if not is_hr_or_admin:
+        if payroll.employee_id != employee.id:
+            flash('Access denied. You can only view your own payslips.', 'danger')
+            return redirect(url_for('project_management.dashboard'))
     
     return generate_pdf(
         'hr/payslip.html', 
