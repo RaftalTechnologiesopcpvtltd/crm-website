@@ -21,7 +21,7 @@ class ProjectForm(FlaskForm):
     name = StringField('Project Name', validators=[DataRequired(), Length(max=100)])
     description = TextAreaField('Description', validators=[Optional()])
     client = StringField('Client Name', validators=[Optional(), Length(max=100)])
-    client_user_id = SelectField('Client User', validators=[Optional()], coerce=int)
+    client_user_id = SelectField('Client User', validators=[Optional()], coerce=int, default=0)
     platform = SelectField('Platform', 
                          choices=[('fiverr', 'Fiverr'), 
                                  ('upwork', 'Upwork'), 
