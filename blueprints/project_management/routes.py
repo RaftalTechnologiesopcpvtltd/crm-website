@@ -9,7 +9,7 @@ from blueprints.project_management.forms import (
 from utils import generate_csv, generate_pdf
 from decimal import Decimal
 from sqlalchemy import func
-from datetime import datetime
+from datetime import datetime, date
 
 project_bp = Blueprint('project_management', __name__, url_prefix='')
 
@@ -690,6 +690,47 @@ def new_payment():
                     sale.received_amount += payment.amount_received
                     sale.calculate_difference()
                     payment.is_recorded_in_sales = True
+                    
+                    # Create accounting journal entry for payment (if accounting module is enabled)
+                    try:
+                        from blueprints.accounting.routes import create_journal_entry
+                        from models_accounting import ChartOfAccount
+                        
+                        # Find appropriate accounts
+                        cash_account = ChartOfAccount.query.filter_by(name='Cash').first()
+                        ar_account = ChartOfAccount.query.filter_by(name='Accounts Receivable').first()
+                        
+                        if cash_account and ar_account:
+                            # Prepare line items
+                            line_items = [
+                                # Debit Cash
+                                {
+                                    'account_id': cash_account.id,
+                                    'debit_amount': float(payment.amount_received),
+                                    'credit_amount': 0,
+                                    'description': f'Payment received for project {project.name}'
+                                },
+                                # Credit Accounts Receivable
+                                {
+                                    'account_id': ar_account.id,
+                                    'debit_amount': 0,
+                                    'credit_amount': float(payment.amount_received),
+                                    'description': f'Payment received for project {project.name}'
+                                }
+                            ]
+                            
+                            # Create journal entry
+                            create_journal_entry(
+                                entry_type='PAYMENT',
+                                transaction_date=payment.payment_date or datetime.now().date(),
+                                reference=f'PMT-{payment.id}',
+                                memo=f'Payment for project: {project.name}',
+                                line_items=line_items,
+                                user_id=current_user.id
+                            )
+                    except Exception as e:
+                        # Log error but don't prevent payment creation if accounting fails
+                        print(f"Error creating accounting entry for payment: {str(e)}")
             
             db.session.commit()
         
@@ -843,6 +884,48 @@ def close_sales(id):
     sale.calculate_difference()
     
     db.session.commit()
+    
+    # Create accounting journal entry for closing sales with a difference (write-off)
+    if sale.difference > 0:
+        try:
+            from blueprints.accounting.routes import create_journal_entry
+            from models_accounting import ChartOfAccount
+            
+            # Find appropriate accounts
+            ar_account = ChartOfAccount.query.filter_by(name='Accounts Receivable').first()
+            revenue_account = ChartOfAccount.query.filter_by(name='Sales Revenue').first()
+            
+            if ar_account and revenue_account:
+                # Prepare line items for writing off the difference
+                line_items = [
+                    # Credit Accounts Receivable (reduce AR)
+                    {
+                        'account_id': ar_account.id,
+                        'debit_amount': 0,
+                        'credit_amount': float(sale.difference),
+                        'description': f'Write-off for closed project: {sale.project.name}'
+                    },
+                    # Debit Revenue (reduce revenue)
+                    {
+                        'account_id': revenue_account.id,
+                        'debit_amount': float(sale.difference),
+                        'credit_amount': 0,
+                        'description': f'Write-off for closed project: {sale.project.name}'
+                    }
+                ]
+                
+                # Create journal entry
+                create_journal_entry(
+                    entry_type='WRITEOFF',
+                    transaction_date=sale.closed_date,
+                    reference=f'CLO-{sale.id}',
+                    memo=f'Write-off on closing sales for project: {sale.project.name}',
+                    line_items=line_items,
+                    user_id=current_user.id
+                )
+        except Exception as e:
+            # Log error but don't prevent sales closure if accounting fails
+            print(f"Error creating accounting entry for sales closure: {str(e)}")
     
     flash('Sales record has been closed successfully!', 'success')
     return redirect(url_for('project_management.sales_detail', id=sale.id))
