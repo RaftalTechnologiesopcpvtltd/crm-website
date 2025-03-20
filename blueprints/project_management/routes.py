@@ -167,15 +167,17 @@ def projects():
     # Accounting can see all projects for financial purposes
     elif current_user.department == 'accounting':
         projects = Project.query.order_by(Project.start_date.desc()).all()
-    # Developers should only see projects they're assigned to
-    elif current_user.department == 'developer':
-        # Find projects where the developer has assigned tasks
+    # All other users should only see projects they're assigned to
+    else:
+        # Find projects where the user has assigned tasks
         assigned_project_ids = db.session.query(Task.project_id).filter_by(user_id=current_user.id).distinct().all()
         assigned_project_ids = [p[0] for p in assigned_project_ids]  # Convert to simple list
-        projects = Project.query.filter(Project.id.in_(assigned_project_ids)).order_by(Project.start_date.desc()).all()
-    # HR and other departments see limited projects
-    else:
-        projects = Project.query.filter_by(status='in-progress').order_by(Project.start_date.desc()).all()
+        
+        if assigned_project_ids:
+            projects = Project.query.filter(Project.id.in_(assigned_project_ids)).order_by(Project.start_date.desc()).all()
+        else:
+            # If user has no assigned projects, show empty list
+            projects = []
         
     return render_template('project_management/projects.html', projects=projects)
 
